@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Optics Lens Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .filters-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .filters-panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:hover {
+            border-color: #667eea;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+
+        .btn-search {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-search:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .results-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .results-header h2 {
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .results-stats {
+            display: flex;
+            gap: 30px;
+            font-size: 0.95em;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .sku-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f9f9f9;
+            transition: all 0.2s;
+        }
+
+        .sku-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            background: #fff;
+        }
+
+        .sku-code {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .sku-desc {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .sku-inventory {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-panel {
+                position: static;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .results-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Global Optics Lens Tracker</h1>
+            <p>Search and filter SKU inventory by optical specifications</p>
+        </div>
+
+        <div class="main-content">
+            <div class="filters-panel">
+                <h2>Filters</h2>
+
+                <div class="filter-group">
+                    <label for="base">Base</label>
+                    <select id="base">
+                        <option value="">All Base Values</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="add">Add</label>
+                    <select id="add">
+                        <option value="">All Add Values</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="segType">Seg Type</label>
+                    <select id="segType">
+                        <option value="">All Seg Types</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="segLens">Seg Lens</label>
+                    <select id="segLens">
+                        <option value="">All Seg Lens</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="coating">Coating</label>
+                    <select id="coating">
+                        <option value="">All Coatings</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="color">Color</label>
+                    <select id="color">
+                        <option value="">All Colors</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="diameter">Diameter</label>
+                    <select id="diameter">
+                        <option value="">All Diameters</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="manufacturer">Manufacturer</label>
+                    <select id="manufacturer">
+                        <option value="">All Manufacturers</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="brand">Brand</label>
+                    <select id="brand">
+                        <option value="">All Brands</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="country">Country of Origin</label>
+                    <select id="country">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-search" onclick="applyFilters()">Search</button>
+                    <button class="btn-clear" onclick="clearFilters()">Clear</button>
+                </div>
+            </div>
+
+            <div class="results-panel">
+                <div class="results-header">
+                    <h2>Results</h2>
+                    <div class="results-stats">
+                        <div class="stat">
+                            <span class="stat-label">SKUs Found</span>
+                            <span class="stat-value" id="skuCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Total Inventory</span>
+                            <span class="stat-value" id="inventoryTotal">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Select filters and click "Search" to view results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentResults = [];
+
+        // Load filter options
+        async function loadOptions() {
+            try {
+                const response = await fetch('/api/options');
+                const options = await response.json();
+
+                populateSelect('base', options.bases);
+                populateSelect('add', options.adds);
+                populateSelect('segType', options.segTypes);
+                populateSelect('segLens', options.segLenses);
+                populateSelect('coating', options.coatings);
+                populateSelect('color', options.colors);
+                populateSelect('diameter', options.diameters);
+                populateSelect('manufacturer', options.manufacturers);
+                populateSelect('brand', options.brands);
+                populateSelect('country', options.countries);
+            } catch (error) {
+                console.error('Error loading options:', error);
+            }
+        }
+
+        function populateSelect(elementId, options) {
+            const select = document.getElementById(elementId);
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                select.appendChild(opt);
+            });
+        }
+
+        async function applyFilters() {
+            const filters = {
+                base: document.getElementById('base').value,
+                add: document.getElementById('add').value,
+                segType: document.getElementById('segType').value,
+                segLens: document.getElementById('segLens').value,
+                coating: document.getElementById('coating').value,
+                color: document.getElementById('color').value,
+                diameter: document.getElementById('diameter').value,
+                manufacturer: document.getElementById('manufacturer').value,
+                brand: document.getElementById('brand').value,
+                country: document.getElementById('country').value
+            };
+
+            // Remove empty filters
+            Object.keys(filters).forEach(key => {
+                if (filters[key] === '') delete filters[key];
+            });
+
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Loading results...</div>';
+
+            try {
+                const queryString = new URLSearchParams(filters).toString();
+                const response = await fetch(`/api/filter?${queryString}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsContainer.innerHTML = `<div class="error-message">Error: ${data.error}</div>`;
+                    return;
+                }
+
+                currentResults = data.results;
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                resultsContainer.innerHTML = `<div class="error-message">Error loading results: ${error.message}</div>`;
+            }
+        }
+
+        function displayResults(data) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            document.getElementById('skuCount').textContent = data.count;
+            document.getElementById('inventoryTotal').textContent = data.totalInventory.toLocaleString();
+
+            if (data.count === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>No matching SKUs found. Try adjusting your filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="results-list">';
+            data.results.forEach(sku => {
+                html += `
+                    <div class="sku-card">
+                        <div class="sku-code">SKU: ${sku.sku}</div>
+                        <div class="sku-desc">${sku.description}</div>
+                        <span class="sku-inventory">📦 ${sku.totalInventory} units</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            if (data.count > 500) {
+                html += `<div class="pagination"><div class="pagination-info">Showing first 500 of ${data.count} results. Refine your filters for more specific results.</div></div>`;
+            }
+
+            resultsContainer.innerHTML = html;
+        }
+
+        function clearFilters() {
+            document.getElementById('base').value = '';
+            document.getElementById('add').value = '';
+            document.getElementById('segType').value = '';
+            document.getElementById('segLens').value = '';
+            document.getElementById('coating').value = '';
+            document.getElementById('color').value = '';
+            document.getElementById('diameter').value = '';
+            document.getElementById('manufacturer').value = '';
+            document.getElementById('brand').value = '';
+            document.getElementById('country').value = '';
+
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>Select filters and click "Search" to view results</p>
+                </div>
+            `;
+            document.getElementById('skuCount').textContent = '0';
+            document.getElementById('inventoryTotal').textContent = '0';
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', loadOptions);
+    </script>
+</body>
+</html>
