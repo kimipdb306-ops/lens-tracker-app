@@ -123,6 +123,22 @@
             background-color: white;
         }
 
+        .form-group select[multiple] {
+            min-height: 120px;
+            padding: 8px;
+        }
+
+        .form-group select[multiple] option {
+            padding: 4px;
+            background-color: white;
+        }
+
+        .form-group select[multiple] option:checked {
+            background: linear-gradient(#667eea, #667eea);
+            background-color: #667eea;
+            color: white;
+        }
+
         .form-group select:focus,
         .form-group input:focus {
             outline: none;
@@ -348,20 +364,74 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label for="demandManufacturer">Manufacturers (Multi-Select)</label>
+                        <select id="demandManufacturer" multiple>
+                            <option value="">-- Select to filter --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandSegType">Seg Types (Multi-Select)</label>
+                        <select id="demandSegType" multiple>
+                            <option value="">-- Select to filter --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandCoating">Coatings (Multi-Select)</label>
+                        <select id="demandCoating" multiple>
+                            <option value="">-- Select to filter --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandBase">Bases (Multi-Select)</label>
+                        <select id="demandBase" multiple>
+                            <option value="">-- Select to filter --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+
                     <button onclick="calculateDemand()">Calculate Demand</button>
+                    <button onclick="clearDemandFilters()" style="background: #999; margin-top: 10px;">Clear Filters</button>
                 </div>
 
                 <div class="results">
                     <div class="results-header">
                         <h3>Demand Results</h3>
+                        <div id="activeFilters" style="margin-top: 10px; font-size: 0.9em; color: #666;"></div>
                     </div>
 
                     <div class="results-stats" id="demandStats"></div>
 
-                    <h3 style="margin-top: 30px; margin-bottom: 20px;">Top Manufacturers by Demand</h3>
+                    <div id="breakdownsByManufacturer" style="display: none;">
+                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Manufacturer</h3>
+                        <div id="breakdownMfgResults"></div>
+                    </div>
+
+                    <div id="breakdownsBySegType" style="display: none;">
+                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Seg Type</h3>
+                        <div id="breakdownSegTypeResults"></div>
+                    </div>
+
+                    <div id="breakdownsByCoating" style="display: none;">
+                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Coating</h3>
+                        <div id="breakdownCoatingResults"></div>
+                    </div>
+
+                    <div id="breakdownsByBase" style="display: none;">
+                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Base</h3>
+                        <div id="breakdownBaseResults"></div>
+                    </div>
+
+                    <h3 style="margin-top: 30px; margin-bottom: 20px;">🏆 Top Manufacturers by Demand</h3>
                     <div id="topMfgResults"></div>
 
-                    <h3 style="margin-top: 30px; margin-bottom: 20px;">Top 20 Most Demanded SKUs</h3>
+                    <h3 style="margin-top: 30px; margin-bottom: 20px;">⭐ Top 20 Most Demanded SKUs</h3>
                     <div id="demandResults"></div>
                 </div>
             </div>
@@ -378,11 +448,17 @@
                 const response = await fetch('/api/options');
                 filterOptions = await response.json();
                 
-                // Populate dropdowns
+                // Populate filter tab dropdowns
                 populateSelect('manufacturer', filterOptions.manufacturers || []);
                 populateSelect('segType', filterOptions.segTypes || []);
                 populateSelect('coating', filterOptions.coatings || []);
                 populateSelect('base', filterOptions.bases || []);
+
+                // Populate demand tab multi-select dropdowns
+                populateSelectOptions('demandManufacturer', filterOptions.manufacturers || []);
+                populateSelectOptions('demandSegType', filterOptions.segTypes || []);
+                populateSelectOptions('demandCoating', filterOptions.coatings || []);
+                populateSelectOptions('demandBase', filterOptions.bases || []);
                 
                 // Load initial results
                 performFilter();
@@ -393,6 +469,20 @@
 
         function populateSelect(id, options) {
             const select = document.getElementById(id);
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+        }
+
+        function populateSelectOptions(id, options) {
+            const select = document.getElementById(id);
+            // Remove the placeholder option
+            const placeholder = select.querySelector('option[value=""]');
+            if (placeholder) placeholder.remove();
+            
             options.forEach(opt => {
                 const option = document.createElement('option');
                 option.value = opt;
@@ -460,6 +550,12 @@
             event.target.classList.add('active');
         }
 
+        function getSelectedMultiValues(selectId) {
+            const select = document.getElementById(selectId);
+            const selected = Array.from(select.selectedOptions).map(opt => opt.value);
+            return selected.filter(v => v); // Remove empty values
+        }
+
         async function calculateDemand() {
             try {
                 let url = `/api/demand?period=${currentPeriod}`;
@@ -471,8 +567,27 @@
                     url = `/api/demand?startDate=${startDate}&endDate=${endDate}`;
                 }
 
+                // Add multi-select filters
+                const manufacturers = getSelectedMultiValues('demandManufacturer');
+                const segTypes = getSelectedMultiValues('demandSegType');
+                const coatings = getSelectedMultiValues('demandCoating');
+                const bases = getSelectedMultiValues('demandBase');
+
+                if (manufacturers.length > 0) url += `&manufacturers=${manufacturers.join(',')}`;
+                if (segTypes.length > 0) url += `&segTypes=${segTypes.join(',')}`;
+                if (coatings.length > 0) url += `&coatings=${coatings.join(',')}`;
+                if (bases.length > 0) url += `&bases=${bases.join(',')}`;
+
                 const response = await fetch(url);
                 const data = await response.json();
+
+                // Display active filters
+                let activeFiltersHtml = '';
+                if (manufacturers.length > 0) activeFiltersHtml += `<strong>Manufacturers:</strong> ${manufacturers.join(', ')}<br>`;
+                if (segTypes.length > 0) activeFiltersHtml += `<strong>Seg Types:</strong> ${segTypes.join(', ')}<br>`;
+                if (coatings.length > 0) activeFiltersHtml += `<strong>Coatings:</strong> ${coatings.join(', ')}<br>`;
+                if (bases.length > 0) activeFiltersHtml += `<strong>Bases:</strong> ${bases.join(', ')}<br>`;
+                document.getElementById('activeFilters').innerHTML = activeFiltersHtml;
                 
                 // Display summary stats
                 const statsHtml = `
@@ -493,6 +608,57 @@
                     </div>
                 `;
                 document.getElementById('demandStats').innerHTML = statsHtml;
+
+                // Display breakdowns
+                if (data.breakdowns) {
+                    if (data.breakdowns.byManufacturer && data.breakdowns.byManufacturer.length > 0) {
+                        document.getElementById('breakdownsByManufacturer').style.display = 'block';
+                        let html = '<table><thead><tr><th>Manufacturer</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                        data.breakdowns.byManufacturer.forEach(item => {
+                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                        document.getElementById('breakdownMfgResults').innerHTML = html;
+                    } else {
+                        document.getElementById('breakdownsByManufacturer').style.display = 'none';
+                    }
+
+                    if (data.breakdowns.bySegType && data.breakdowns.bySegType.length > 0) {
+                        document.getElementById('breakdownsBySegType').style.display = 'block';
+                        let html = '<table><thead><tr><th>Seg Type</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                        data.breakdowns.bySegType.forEach(item => {
+                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                        document.getElementById('breakdownSegTypeResults').innerHTML = html;
+                    } else {
+                        document.getElementById('breakdownsBySegType').style.display = 'none';
+                    }
+
+                    if (data.breakdowns.byCoating && data.breakdowns.byCoating.length > 0) {
+                        document.getElementById('breakdownsByCoating').style.display = 'block';
+                        let html = '<table><thead><tr><th>Coating</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                        data.breakdowns.byCoating.forEach(item => {
+                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                        document.getElementById('breakdownCoatingResults').innerHTML = html;
+                    } else {
+                        document.getElementById('breakdownsByCoating').style.display = 'none';
+                    }
+
+                    if (data.breakdowns.byBase && data.breakdowns.byBase.length > 0) {
+                        document.getElementById('breakdownsByBase').style.display = 'block';
+                        let html = '<table><thead><tr><th>Base</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                        data.breakdowns.byBase.forEach(item => {
+                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                        document.getElementById('breakdownBaseResults').innerHTML = html;
+                    } else {
+                        document.getElementById('breakdownsByBase').style.display = 'none';
+                    }
+                }
 
                 // Top manufacturers
                 if (data.summary.topManufacturers && data.summary.topManufacturers.length > 0) {
@@ -524,6 +690,15 @@
                 console.error('Error calculating demand:', error);
                 document.getElementById('demandResults').innerHTML = '<div class="no-results">Error loading demand data</div>';
             }
+        }
+
+        function clearDemandFilters() {
+            document.getElementById('demandManufacturer').selectedIndex = -1;
+            document.getElementById('demandSegType').selectedIndex = -1;
+            document.getElementById('demandCoating').selectedIndex = -1;
+            document.getElementById('demandBase').selectedIndex = -1;
+            document.getElementById('activeFilters').innerHTML = '';
+            calculateDemand();
         }
 
         // Initialize on page load

@@ -148,7 +148,7 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
- * API: /api/demand - Calculate demand over time period
+ * API: /api/demand - Calculate demand over time period with optional filter breakdown
  */
 app.get('/api/demand', (req, res) => {
   try {
@@ -185,10 +185,19 @@ app.get('/api/demand', (req, res) => {
       return res.status(400).json({ error: 'Invalid period or date range' });
     }
 
+    // Parse multi-select filters (comma-separated values)
+    const selectedManufacturers = req.query.manufacturers ? req.query.manufacturers.split(',') : [];
+    const selectedSegTypes = req.query.segTypes ? req.query.segTypes.split(',') : [];
+    const selectedCoatings = req.query.coatings ? req.query.coatings.split(',') : [];
+    const selectedBases = req.query.bases ? req.query.bases.split(',') : [];
+
     // For now, estimate demand based on current inventory vs baseline
     // Real demand would require historical snapshots
     const demandData = [];
     const manufacturerDemand = {};
+    const segTypeDemand = {};
+    const coatingDemand = {};
+    const baseDemand = {};
     let totalDemand = 0;
 
     allData.forEach(item => {
@@ -202,20 +211,43 @@ app.get('/api/demand', (req, res) => {
           sku: item.ItemNumber,
           description: item.ItemDesc,
           manufacturer: item.MFG,
+          segType: item['Seg Type'] || 'N/A',
+          coating: item.Coating || 'N/A',
+          base: String(item.Base || ''),
           demand: Math.round(demand),
           currentInventory: currentInv
         });
         
         totalDemand += demand;
+        
+        // Aggregate by dimension
         manufacturerDemand[item.MFG] = (manufacturerDemand[item.MFG] || 0) + demand;
+        const segType = String(item['Seg Type'] || 'N/A').trim();
+        segTypeDemand[segType] = (segTypeDemand[segType] || 0) + demand;
+        const coating = String(item.Coating || 'N/A').trim();
+        coatingDemand[coating] = (coatingDemand[coating] || 0) + demand;
+        const base = String(item.Base || '').trim();
+        baseDemand[base] = (baseDemand[base] || 0) + demand;
       }
     });
 
+    // If filters selected, filter the demand data and recalculate aggregations
+    let filteredDemandData = demandData;
+    if (selectedManufacturers.length > 0 || selectedSegTypes.length > 0 || selectedCoatings.length > 0 || selectedBases.length > 0) {
+      filteredDemandData = demandData.filter(item => {
+        if (selectedManufacturers.length > 0 && !selectedManufacturers.includes(item.manufacturer)) return false;
+        if (selectedSegTypes.length > 0 && !selectedSegTypes.includes(item.segType)) return false;
+        if (selectedCoatings.length > 0 && !selectedCoatings.includes(item.coating)) return false;
+        if (selectedBases.length > 0 && !selectedBases.includes(item.base)) return false;
+        return true;
+      });
+    }
+
     // Sort by demand
-    demandData.sort((a, b) => b.demand - a.demand);
+    filteredDemandData.sort((a, b) => b.demand - a.demand);
 
     // Get top movers
-    const topMovers = demandData.slice(0, 10);
+    const topMovers = filteredDemandData.slice(0, 10);
     
     // Get top manufacturers by demand
     const topMfgs = Object.entries(manufacturerDemand)
@@ -223,17 +255,62 @@ app.get('/api/demand', (req, res) => {
       .sort((a, b) => b.demand - a.demand)
       .slice(0, 10);
 
+    // Build breakdown objects for selected filters
+    const breakdowns = {};
+
+    if (selectedManufacturers.length > 0) {
+      breakdowns.byManufacturer = selectedManufacturers.map(mfg => ({
+        name: mfg,
+        demand: Math.round(manufacturerDemand[mfg] || 0),
+        skus: filteredDemandData.filter(x => x.manufacturer === mfg).length
+      })).sort((a, b) => b.demand - a.demand);
+    }
+
+    if (selectedSegTypes.length > 0) {
+      breakdowns.bySegType = selectedSegTypes.map(st => ({
+        name: st,
+        demand: Math.round(segTypeDemand[st] || 0),
+        skus: filteredDemandData.filter(x => x.segType === st).length
+      })).sort((a, b) => b.demand - a.demand);
+    }
+
+    if (selectedCoatings.length > 0) {
+      breakdowns.byCoating = selectedCoatings.map(c => ({
+        name: c,
+        demand: Math.round(coatingDemand[c] || 0),
+        skus: filteredDemandData.filter(x => x.coating === c).length
+      })).sort((a, b) => b.demand - a.demand);
+    }
+
+    if (selectedBases.length > 0) {
+      breakdowns.byBase = selectedBases.map(b => ({
+        name: b,
+        demand: Math.round(baseDemand[b] || 0),
+        skus: filteredDemandData.filter(x => x.base === b).length
+      })).sort((a, b) => b.demand - a.demand);
+    }
+
+    // Calculate total demand from filtered data
+    const filteredTotalDemand = filteredDemandData.reduce((sum, item) => sum + item.demand, 0);
+
     res.json({
       period,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
+      filters: {
+        manufacturers: selectedManufacturers,
+        segTypes: selectedSegTypes,
+        coatings: selectedCoatings,
+        bases: selectedBases
+      },
       summary: {
-        totalDemand: Math.round(totalDemand),
-        skusWithDemand: demandData.length,
+        totalDemand: Math.round(filteredTotalDemand),
+        skusWithDemand: filteredDemandData.length,
         topMovers,
         topManufacturers: topMfgs
       },
-      demand: demandData
+      breakdowns,
+      demand: filteredDemandData
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
