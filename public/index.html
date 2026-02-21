@@ -283,6 +283,11 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
+            width: 100%;
+        }
+
+        .date-range input {
+            width: 100%;
         }
 
         .select-all-btn {
@@ -295,7 +300,12 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
-            min-width: 38px;
+            min-width: 40px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         .select-all-btn:hover {
