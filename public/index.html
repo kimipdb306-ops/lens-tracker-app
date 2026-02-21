@@ -99,6 +99,7 @@
             height: fit-content;
             position: sticky;
             top: 15px;
+            overflow: hidden;
         }
 
         .sidebar h2 {
@@ -112,6 +113,7 @@
 
         .form-group {
             margin-bottom: 12px;
+            overflow: hidden;
         }
 
         .form-group label {
@@ -125,11 +127,13 @@
         .form-group select,
         .form-group input {
             width: 100%;
+            max-width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 0.9em;
             background-color: white;
+            box-sizing: border-box;
         }
 
         .form-group select[multiple] {
@@ -282,17 +286,19 @@
         .date-range {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
+            overflow: hidden;
         }
 
         .date-range input {
             width: 100%;
+            min-width: 0;
         }
 
         .select-all-btn {
-            padding: 4px 8px;
-            font-size: 0.75em;
+            padding: 3px 6px;
+            font-size: 0.7em;
             background: #667eea;
             color: white;
             border: none;
@@ -300,8 +306,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
-            min-width: 40px;
-            height: 28px;
+            height: 24px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
