@@ -85,7 +85,7 @@ app.get('/api/filter', (req, res) => {
     }
 
     const filters = req.query;
-    const inventoryKey = 'Current Inventory (02/19/26)';
+    const inventoryKey = 'Current Inventory';
 
     let results = allData.filter(item => {
       if (filters.base && String(item.Base || '') !== filters.base) return false;
