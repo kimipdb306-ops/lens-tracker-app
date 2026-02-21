@@ -14,6 +14,27 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Lookup tables for code mappings
+const materialIdMap = {
+  '1.00': 'Polycarbonate',
+  '2.00': 'CR39',
+  '3.00': 'Glass',
+  '4.00': '1.55 Mid Index',
+  '5.00': '1.60 High Index',
+  '6.00': 'Glass',
+  '8.00': '1.74 High Index',
+  '9.00': 'Trivex',
+  '10.00': '1.67 High Index'
+};
+
+const productTypeMap = {
+  'S': 'Semi-Finished',
+  'F': 'Finished'
+};
+
+// Products to exclude from demand analytics
+const excludedProductTypes = ['frame', 'z'];
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -40,18 +61,30 @@ function computeFilterOptions() {
   };
 
   allData.forEach(item => {
-    if (item.Base !== undefined) sets.bases.add(String(item.Base).trim());
-    if (item.Add !== undefined) sets.adds.add(String(item.Add).trim());
-    if (item['Seg Type']) sets.segTypes.add(String(item['Seg Type']).trim());
-    if (item['Seg Lens']) sets.segLenses.add(String(item['Seg Lens']).trim());
-    if (item.Coating) sets.coatings.add(String(item.Coating).trim());
-    if (item.Color) sets.colors.add(String(item.Color).trim());
-    if (item.Diameter !== undefined) sets.diameters.add(String(item.Diameter).trim());
-    if (item.MFG) sets.manufacturers.add(String(item.MFG).trim());
-    if (item['Product Type']) sets.productTypes.add(String(item['Product Type']).trim());
-    if (item['Material ID']) sets.materialIds.add(String(item['Material ID']).trim());
-    if (item.Brand) sets.brands.add(String(item.Brand).trim());
-    if (item['Country Origin']) sets.countries.add(String(item['Country Origin']).trim());
+    // Skip excluded product types
+    const productType = String(item['Product Type'] || '').toLowerCase().trim();
+    if (!excludedProductTypes.includes(productType)) {
+      if (item.Base !== undefined) sets.bases.add(String(item.Base).trim());
+      if (item.Add !== undefined) sets.adds.add(String(item.Add).trim());
+      if (item['Seg Type']) sets.segTypes.add(String(item['Seg Type']).trim());
+      if (item['Seg Lens']) sets.segLenses.add(String(item['Seg Lens']).trim());
+      if (item.Coating) sets.coatings.add(String(item.Coating).trim());
+      if (item.Color) sets.colors.add(String(item.Color).trim());
+      if (item.Diameter !== undefined) sets.diameters.add(String(item.Diameter).trim());
+      if (item.MFG) sets.manufacturers.add(String(item.MFG).trim());
+      if (item['Product Type']) {
+        const ptCode = String(item['Product Type']).trim();
+        const ptLabel = productTypeMap[ptCode] || ptCode;
+        sets.productTypes.add(ptLabel);
+      }
+      if (item['Material ID']) {
+        const matIdCode = String(item['Material ID']).trim();
+        const matIdLabel = materialIdMap[matIdCode] || matIdCode;
+        sets.materialIds.add(matIdLabel);
+      }
+      if (item.Brand) sets.brands.add(String(item.Brand).trim());
+      if (item['Country Origin']) sets.countries.add(String(item['Country Origin']).trim());
+    }
   });
 
   const sortNumeric = (a, b) => {
@@ -69,7 +102,7 @@ function computeFilterOptions() {
     diameters: Array.from(sets.diameters).sort(sortNumeric),
     manufacturers: Array.from(sets.manufacturers).sort(),
     productTypes: Array.from(sets.productTypes).sort(),
-    materialIds: Array.from(sets.materialIds).sort(),
+    materialIds: Array.from(sets.materialIds).sort(sortNumeric),
     brands: Array.from(sets.brands).sort(),
     countries: Array.from(sets.countries).sort()
   };
@@ -225,12 +258,24 @@ app.get('/api/demand', (req, res) => {
     let totalDemand = 0;
 
     allData.forEach(item => {
+      // Skip excluded product types (frame, z, etc.)
+      const productType = String(item['Product Type'] || '').toLowerCase().trim();
+      if (excludedProductTypes.includes(productType)) {
+        return;
+      }
+
       const currentInv = item['Current Inventory'] || 0;
       // Estimate baseline (assume 50% less than current = demand)
       const estimatedBaseline = currentInv * 1.5;
       const demand = Math.max(0, estimatedBaseline - currentInv);
       
       if (demand > 0) {
+        // Map codes to labels
+        const matIdCode = String(item['Material ID'] || '');
+        const matIdLabel = materialIdMap[matIdCode] || matIdCode;
+        const ptCode = String(item['Product Type'] || '');
+        const ptLabel = productTypeMap[ptCode] || ptCode;
+
         demandData.push({
           sku: item.ItemNumber,
           description: item.ItemDesc,
@@ -242,8 +287,8 @@ app.get('/api/demand', (req, res) => {
           base: String(item.Base || ''),
           add: String(item.Add || ''),
           diameter: String(item.Diameter || ''),
-          productType: item['Product Type'] || 'N/A',
-          materialId: item['Material ID'] || 'N/A',
+          productType: ptLabel,
+          materialId: matIdLabel,
           brand: item.Brand || 'N/A',
           country: item['Country Origin'] || 'N/A',
           demand: Math.round(demand),
@@ -252,7 +297,7 @@ app.get('/api/demand', (req, res) => {
         
         totalDemand += demand;
         
-        // Aggregate by all dimensions
+        // Aggregate by all dimensions (using mapped labels)
         aggregations.manufacturer[item.MFG] = (aggregations.manufacturer[item.MFG] || 0) + demand;
         const st = String(item['Seg Type'] || 'N/A').trim();
         aggregations.segType[st] = (aggregations.segType[st] || 0) + demand;
@@ -268,10 +313,8 @@ app.get('/api/demand', (req, res) => {
         aggregations.add[add] = (aggregations.add[add] || 0) + demand;
         const dia = String(item.Diameter || '').trim();
         aggregations.diameter[dia] = (aggregations.diameter[dia] || 0) + demand;
-        const pt = String(item['Product Type'] || 'N/A').trim();
-        aggregations.productType[pt] = (aggregations.productType[pt] || 0) + demand;
-        const mid = String(item['Material ID'] || 'N/A').trim();
-        aggregations.materialId[mid] = (aggregations.materialId[mid] || 0) + demand;
+        aggregations.productType[ptLabel] = (aggregations.productType[ptLabel] || 0) + demand;
+        aggregations.materialId[matIdLabel] = (aggregations.materialId[matIdLabel] || 0) + demand;
         const br = String(item.Brand || 'N/A').trim();
         aggregations.brand[br] = (aggregations.brand[br] || 0) + demand;
         const cty = String(item['Country Origin'] || 'N/A').trim();
