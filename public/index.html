@@ -282,7 +282,24 @@
         .date-range {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .select-all-btn {
+            padding: 4px 8px;
+            font-size: 0.75em;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            min-width: 38px;
+        }
+
+        .select-all-btn:hover {
+            background: #764ba2;
         }
     </style>
 </head>
@@ -351,6 +368,8 @@
                 <div class="sidebar">
                     <h2>Demand Analytics</h2>
                     
+                    <button onclick="calculateDemand()" style="margin-bottom: 15px;">Calculate Demand</button>
+
                     <div class="form-group">
                         <label>Time Period</label>
                         <div class="time-presets">
@@ -364,21 +383,15 @@
                     <div class="form-group">
                         <label>Custom Date Range</label>
                         <div class="date-range">
-                            <div>
-                                <label style="font-size: 0.8em; color: #999;">From</label>
-                                <input type="date" id="startDate">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.8em; color: #999;">To</label>
-                                <input type="date" id="endDate">
-                            </div>
+                            <input type="date" id="startDate" placeholder="From">
+                            <input type="date" id="endDate" placeholder="To">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandManufacturer">Manufacturer</label>
-                            <button type="button" onclick="selectAllInDropdown('demandManufacturer')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandManufacturer')">All</button>
                         </div>
                         <select id="demandManufacturer" multiple></select>
                     </div>
@@ -386,7 +399,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandLensType">Lens Type</label>
-                            <button type="button" onclick="selectAllInDropdown('demandLensType')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandLensType')">All</button>
                         </div>
                         <select id="demandLensType" multiple></select>
                     </div>
@@ -394,7 +407,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandLensSubtype">Lens Subtype</label>
-                            <button type="button" onclick="selectAllInDropdown('demandLensSubtype')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandLensSubtype')">All</button>
                         </div>
                         <select id="demandLensSubtype" multiple></select>
                     </div>
@@ -402,7 +415,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandCoating">Coating</label>
-                            <button type="button" onclick="selectAllInDropdown('demandCoating')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandCoating')">All</button>
                         </div>
                         <select id="demandCoating" multiple></select>
                     </div>
@@ -410,7 +423,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandColor">Color</label>
-                            <button type="button" onclick="selectAllInDropdown('demandColor')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandColor')">All</button>
                         </div>
                         <select id="demandColor" multiple></select>
                     </div>
@@ -418,7 +431,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandBase">Base</label>
-                            <button type="button" onclick="selectAllInDropdown('demandBase')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandBase')">All</button>
                         </div>
                         <select id="demandBase" multiple></select>
                     </div>
@@ -426,7 +439,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandAdd">Add</label>
-                            <button type="button" onclick="selectAllInDropdown('demandAdd')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandAdd')">All</button>
                         </div>
                         <select id="demandAdd" multiple></select>
                     </div>
@@ -434,7 +447,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandDiameter">Diameter</label>
-                            <button type="button" onclick="selectAllInDropdown('demandDiameter')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandDiameter')">All</button>
                         </div>
                         <select id="demandDiameter" multiple></select>
                     </div>
@@ -442,15 +455,15 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandProductType">Product Type</label>
-                            <button type="button" onclick="selectAllInDropdown('demandProductType')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandProductType')">All</button>
                         </div>
                         <select id="demandProductType" multiple></select>
                     </div>
 
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label for="demandMaterialId">Material ID</label>
-                            <button type="button" onclick="selectAllInDropdown('demandMaterialId')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <label for="demandMaterialId">Material</label>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandMaterialId')">All</button>
                         </div>
                         <select id="demandMaterialId" multiple></select>
                     </div>
@@ -458,7 +471,7 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandBrand">Brand</label>
-                            <button type="button" onclick="selectAllInDropdown('demandBrand')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandBrand')">All</button>
                         </div>
                         <select id="demandBrand" multiple></select>
                     </div>
@@ -466,13 +479,12 @@
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label for="demandCountry">Country of Origin</label>
-                            <button type="button" onclick="selectAllInDropdown('demandCountry')" style="padding: 4px 12px; font-size: 0.85em; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">All</button>
+                            <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandCountry')">All</button>
                         </div>
                         <select id="demandCountry" multiple></select>
                     </div>
 
-                    <button onclick="calculateDemand()">Calculate Demand</button>
-                    <button onclick="clearDemandFilters()" style="background: #999; margin-top: 10px;">Clear Filters</button>
+                    <button onclick="clearDemandFilters()" style="background: #999;">Clear Filters</button>
                 </div>
 
                 <div class="results">
