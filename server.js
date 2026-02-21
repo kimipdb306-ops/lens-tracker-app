@@ -33,6 +33,8 @@ function computeFilterOptions() {
     colors: new Set(),
     diameters: new Set(),
     manufacturers: new Set(),
+    productTypes: new Set(),
+    materialIds: new Set(),
     brands: new Set(),
     countries: new Set()
   };
@@ -46,6 +48,8 @@ function computeFilterOptions() {
     if (item.Color) sets.colors.add(String(item.Color).trim());
     if (item.Diameter !== undefined) sets.diameters.add(String(item.Diameter).trim());
     if (item.MFG) sets.manufacturers.add(String(item.MFG).trim());
+    if (item['Product Type']) sets.productTypes.add(String(item['Product Type']).trim());
+    if (item['Material ID']) sets.materialIds.add(String(item['Material ID']).trim());
     if (item.Brand) sets.brands.add(String(item.Brand).trim());
     if (item['Country Origin']) sets.countries.add(String(item['Country Origin']).trim());
   });
@@ -64,6 +68,8 @@ function computeFilterOptions() {
     colors: Array.from(sets.colors).sort(),
     diameters: Array.from(sets.diameters).sort(sortNumeric),
     manufacturers: Array.from(sets.manufacturers).sort(),
+    productTypes: Array.from(sets.productTypes).sort(),
+    materialIds: Array.from(sets.materialIds).sort(),
     brands: Array.from(sets.brands).sort(),
     countries: Array.from(sets.countries).sort()
   };
@@ -194,8 +200,8 @@ app.get('/api/demand', (req, res) => {
     const selectedBases = req.query.bases ? req.query.bases.split(',') : [];
     const selectedAdds = req.query.adds ? req.query.adds.split(',') : [];
     const selectedDiameters = req.query.diameters ? req.query.diameters.split(',') : [];
-    const selectedMaterials = req.query.materials ? req.query.materials.split(',') : [];
-    const selectedLensForms = req.query.lensForms ? req.query.lensForms.split(',') : [];
+    const selectedProductTypes = req.query.productTypes ? req.query.productTypes.split(',') : [];
+    const selectedMaterialIds = req.query.materialIds ? req.query.materialIds.split(',') : [];
     const selectedBrands = req.query.brands ? req.query.brands.split(',') : [];
     const selectedCountries = req.query.countries ? req.query.countries.split(',') : [];
 
@@ -211,8 +217,8 @@ app.get('/api/demand', (req, res) => {
       base: {},
       add: {},
       diameter: {},
-      material: {},
-      lensForm: {},
+      productType: {},
+      materialId: {},
       brand: {},
       country: {}
     };
@@ -236,8 +242,8 @@ app.get('/api/demand', (req, res) => {
           base: String(item.Base || ''),
           add: String(item.Add || ''),
           diameter: String(item.Diameter || ''),
-          material: item.Material || 'N/A',
-          lensForm: item['Seg Type'] || 'N/A', // Using Seg Type as proxy
+          productType: item['Product Type'] || 'N/A',
+          materialId: item['Material ID'] || 'N/A',
           brand: item.Brand || 'N/A',
           country: item['Country Origin'] || 'N/A',
           demand: Math.round(demand),
@@ -262,8 +268,10 @@ app.get('/api/demand', (req, res) => {
         aggregations.add[add] = (aggregations.add[add] || 0) + demand;
         const dia = String(item.Diameter || '').trim();
         aggregations.diameter[dia] = (aggregations.diameter[dia] || 0) + demand;
-        const mat = String(item.Material || 'N/A').trim();
-        aggregations.material[mat] = (aggregations.material[mat] || 0) + demand;
+        const pt = String(item['Product Type'] || 'N/A').trim();
+        aggregations.productType[pt] = (aggregations.productType[pt] || 0) + demand;
+        const mid = String(item['Material ID'] || 'N/A').trim();
+        aggregations.materialId[mid] = (aggregations.materialId[mid] || 0) + demand;
         const br = String(item.Brand || 'N/A').trim();
         aggregations.brand[br] = (aggregations.brand[br] || 0) + demand;
         const cty = String(item['Country Origin'] || 'N/A').trim();
@@ -275,8 +283,8 @@ app.get('/api/demand', (req, res) => {
     let filteredDemandData = demandData;
     const hasFilters = selectedManufacturers.length > 0 || selectedSegTypes.length > 0 || selectedSegLenses.length > 0 || 
                        selectedCoatings.length > 0 || selectedColors.length > 0 || selectedBases.length > 0 ||
-                       selectedAdds.length > 0 || selectedDiameters.length > 0 || selectedMaterials.length > 0 ||
-                       selectedLensForms.length > 0 || selectedBrands.length > 0 || selectedCountries.length > 0;
+                       selectedAdds.length > 0 || selectedDiameters.length > 0 || selectedProductTypes.length > 0 ||
+                       selectedMaterialIds.length > 0 || selectedBrands.length > 0 || selectedCountries.length > 0;
     
     if (hasFilters) {
       filteredDemandData = demandData.filter(item => {
@@ -288,8 +296,8 @@ app.get('/api/demand', (req, res) => {
         if (selectedBases.length > 0 && !selectedBases.includes(item.base)) return false;
         if (selectedAdds.length > 0 && !selectedAdds.includes(item.add)) return false;
         if (selectedDiameters.length > 0 && !selectedDiameters.includes(item.diameter)) return false;
-        if (selectedMaterials.length > 0 && !selectedMaterials.includes(item.material)) return false;
-        if (selectedLensForms.length > 0 && !selectedLensForms.includes(item.lensForm)) return false;
+        if (selectedProductTypes.length > 0 && !selectedProductTypes.includes(item.productType)) return false;
+        if (selectedMaterialIds.length > 0 && !selectedMaterialIds.includes(item.materialId)) return false;
         if (selectedBrands.length > 0 && !selectedBrands.includes(item.brand)) return false;
         if (selectedCountries.length > 0 && !selectedCountries.includes(item.country)) return false;
         return true;
@@ -383,11 +391,19 @@ app.get('/api/demand', (req, res) => {
       })).sort((a, b) => b.demand - a.demand);
     }
 
-    if (selectedLensForms.length > 0) {
-      breakdowns.byLensForm = selectedLensForms.map(lf => ({
-        name: lf,
-        demand: Math.round(aggregations.lensForm[lf] || 0),
-        skus: filteredDemandData.filter(x => x.lensForm === lf).length
+    if (selectedProductTypes.length > 0) {
+      breakdowns.byProductType = selectedProductTypes.map(pt => ({
+        name: pt,
+        demand: Math.round(aggregations.productType[pt] || 0),
+        skus: filteredDemandData.filter(x => x.productType === pt).length
+      })).sort((a, b) => b.demand - a.demand);
+    }
+
+    if (selectedMaterialIds.length > 0) {
+      breakdowns.byMaterialId = selectedMaterialIds.map(mid => ({
+        name: mid,
+        demand: Math.round(aggregations.materialId[mid] || 0),
+        skus: filteredDemandData.filter(x => x.materialId === mid).length
       })).sort((a, b) => b.demand - a.demand);
     }
 

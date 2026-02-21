@@ -429,16 +429,16 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="demandMaterial">Material</label>
-                        <select id="demandMaterial" multiple>
+                        <label for="demandProductType">Product Type</label>
+                        <select id="demandProductType" multiple>
                             <option value="">-- Select --</option>
                         </select>
                         <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="demandLensForm">Lens Form</label>
-                        <select id="demandLensForm" multiple>
+                        <label for="demandMaterialId">Material ID</label>
+                        <select id="demandMaterialId" multiple>
                             <option value="">-- Select --</option>
                         </select>
                         <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
@@ -507,8 +507,8 @@
                 populateSelectOptions('demandBase', filterOptions.bases || []);
                 populateSelectOptions('demandAdd', filterOptions.adds || []);
                 populateSelectOptions('demandDiameter', filterOptions.diameters || []);
-                populateSelectOptions('demandMaterial', filterOptions.materials || []);
-                populateSelectOptions('demandLensForm', filterOptions.segTypes || []); // Using segTypes as placeholder
+                populateSelectOptions('demandProductType', filterOptions.productTypes || []);
+                populateSelectOptions('demandMaterialId', filterOptions.materialIds || []);
                 populateSelectOptions('demandBrand', filterOptions.brands || []);
                 populateSelectOptions('demandCountry', filterOptions.countries || []);
                 
@@ -629,8 +629,8 @@
                     bases: getSelectedMultiValues('demandBase'),
                     adds: getSelectedMultiValues('demandAdd'),
                     diameters: getSelectedMultiValues('demandDiameter'),
-                    materials: getSelectedMultiValues('demandMaterial'),
-                    lensForms: getSelectedMultiValues('demandLensForm'),
+                    productTypes: getSelectedMultiValues('demandProductType'),
+                    materialIds: getSelectedMultiValues('demandMaterialId'),
                     brands: getSelectedMultiValues('demandBrand'),
                     countries: getSelectedMultiValues('demandCountry')
                 };
@@ -644,8 +644,8 @@
                 if (filters.bases.length > 0) url += `&bases=${filters.bases.join(',')}`;
                 if (filters.adds.length > 0) url += `&adds=${filters.adds.join(',')}`;
                 if (filters.diameters.length > 0) url += `&diameters=${filters.diameters.join(',')}`;
-                if (filters.materials.length > 0) url += `&materials=${filters.materials.join(',')}`;
-                if (filters.lensForms.length > 0) url += `&lensForms=${filters.lensForms.join(',')}`;
+                if (filters.productTypes.length > 0) url += `&productTypes=${filters.productTypes.join(',')}`;
+                if (filters.materialIds.length > 0) url += `&materialIds=${filters.materialIds.join(',')}`;
                 if (filters.brands.length > 0) url += `&brands=${filters.brands.join(',')}`;
                 if (filters.countries.length > 0) url += `&countries=${filters.countries.join(',')}`;
 
@@ -662,8 +662,8 @@
                 if (filters.bases.length > 0) activeFiltersHtml += `<strong>Base:</strong> ${filters.bases.join(', ')}<br>`;
                 if (filters.adds.length > 0) activeFiltersHtml += `<strong>Add:</strong> ${filters.adds.join(', ')}<br>`;
                 if (filters.diameters.length > 0) activeFiltersHtml += `<strong>Diameter:</strong> ${filters.diameters.join(', ')}<br>`;
-                if (filters.materials.length > 0) activeFiltersHtml += `<strong>Material:</strong> ${filters.materials.join(', ')}<br>`;
-                if (filters.lensForms.length > 0) activeFiltersHtml += `<strong>Lens Form:</strong> ${filters.lensForms.join(', ')}<br>`;
+                if (filters.productTypes.length > 0) activeFiltersHtml += `<strong>Product Type:</strong> ${filters.productTypes.join(', ')}<br>`;
+                if (filters.materialIds.length > 0) activeFiltersHtml += `<strong>Material ID:</strong> ${filters.materialIds.join(', ')}<br>`;
                 if (filters.brands.length > 0) activeFiltersHtml += `<strong>Brand:</strong> ${filters.brands.join(', ')}<br>`;
                 if (filters.countries.length > 0) activeFiltersHtml += `<strong>Country:</strong> ${filters.countries.join(', ')}<br>`;
                 document.getElementById('activeFilters').innerHTML = activeFiltersHtml;
@@ -700,8 +700,8 @@
                         byBase: 'Base',
                         byAdd: 'Add',
                         byDiameter: 'Diameter',
-                        byMaterial: 'Material',
-                        byLensForm: 'Lens Form',
+                        byProductType: 'Product Type',
+                        byMaterialId: 'Material ID',
                         byBrand: 'Brand',
                         byCountry: 'Country'
                     };
@@ -766,8 +766,8 @@
             document.getElementById('demandBase').selectedIndex = -1;
             document.getElementById('demandAdd').selectedIndex = -1;
             document.getElementById('demandDiameter').selectedIndex = -1;
-            document.getElementById('demandMaterial').selectedIndex = -1;
-            document.getElementById('demandLensForm').selectedIndex = -1;
+            document.getElementById('demandProductType').selectedIndex = -1;
+            document.getElementById('demandMaterialId').selectedIndex = -1;
             document.getElementById('demandBrand').selectedIndex = -1;
             document.getElementById('demandCountry').selectedIndex = -1;
             document.getElementById('activeFilters').innerHTML = '';
