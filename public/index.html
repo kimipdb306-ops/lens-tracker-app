@@ -365,35 +365,99 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="demandManufacturer">Manufacturers (Multi-Select)</label>
+                        <label for="demandManufacturer">Manufacturer</label>
                         <select id="demandManufacturer" multiple>
-                            <option value="">-- Select to filter --</option>
+                            <option value="">-- Select --</option>
                         </select>
-                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="demandSegType">Seg Types (Multi-Select)</label>
-                        <select id="demandSegType" multiple>
-                            <option value="">-- Select to filter --</option>
+                        <label for="demandLensType">Lens Type</label>
+                        <select id="demandLensType" multiple>
+                            <option value="">-- Select --</option>
                         </select>
-                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="demandCoating">Coatings (Multi-Select)</label>
+                        <label for="demandLensSubtype">Lens Subtype</label>
+                        <select id="demandLensSubtype" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandCoating">Coating</label>
                         <select id="demandCoating" multiple>
-                            <option value="">-- Select to filter --</option>
+                            <option value="">-- Select --</option>
                         </select>
-                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
                     </div>
 
                     <div class="form-group">
-                        <label for="demandBase">Bases (Multi-Select)</label>
-                        <select id="demandBase" multiple>
-                            <option value="">-- Select to filter --</option>
+                        <label for="demandColor">Color</label>
+                        <select id="demandColor" multiple>
+                            <option value="">-- Select --</option>
                         </select>
-                        <small style="color: #999; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandBase">Base</label>
+                        <select id="demandBase" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandAdd">Add</label>
+                        <select id="demandAdd" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandDiameter">Diameter</label>
+                        <select id="demandDiameter" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandMaterial">Material</label>
+                        <select id="demandMaterial" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandLensForm">Lens Form</label>
+                        <select id="demandLensForm" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandBrand">Brand</label>
+                        <select id="demandBrand" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="demandCountry">Country of Origin</label>
+                        <select id="demandCountry" multiple>
+                            <option value="">-- Select --</option>
+                        </select>
+                        <small style="color: #999; display: block; margin-top: 5px;">Ctrl/Cmd+Click</small>
                     </div>
 
                     <button onclick="calculateDemand()">Calculate Demand</button>
@@ -407,26 +471,6 @@
                     </div>
 
                     <div class="results-stats" id="demandStats"></div>
-
-                    <div id="breakdownsByManufacturer" style="display: none;">
-                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Manufacturer</h3>
-                        <div id="breakdownMfgResults"></div>
-                    </div>
-
-                    <div id="breakdownsBySegType" style="display: none;">
-                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Seg Type</h3>
-                        <div id="breakdownSegTypeResults"></div>
-                    </div>
-
-                    <div id="breakdownsByCoating" style="display: none;">
-                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Coating</h3>
-                        <div id="breakdownCoatingResults"></div>
-                    </div>
-
-                    <div id="breakdownsByBase" style="display: none;">
-                        <h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand Breakdown by Base</h3>
-                        <div id="breakdownBaseResults"></div>
-                    </div>
 
                     <h3 style="margin-top: 30px; margin-bottom: 20px;">🏆 Top Manufacturers by Demand</h3>
                     <div id="topMfgResults"></div>
@@ -456,9 +500,17 @@
 
                 // Populate demand tab multi-select dropdowns
                 populateSelectOptions('demandManufacturer', filterOptions.manufacturers || []);
-                populateSelectOptions('demandSegType', filterOptions.segTypes || []);
+                populateSelectOptions('demandLensType', filterOptions.segTypes || []);
+                populateSelectOptions('demandLensSubtype', filterOptions.segLenses || []);
                 populateSelectOptions('demandCoating', filterOptions.coatings || []);
+                populateSelectOptions('demandColor', filterOptions.colors || []);
                 populateSelectOptions('demandBase', filterOptions.bases || []);
+                populateSelectOptions('demandAdd', filterOptions.adds || []);
+                populateSelectOptions('demandDiameter', filterOptions.diameters || []);
+                populateSelectOptions('demandMaterial', filterOptions.materials || []);
+                populateSelectOptions('demandLensForm', filterOptions.segTypes || []); // Using segTypes as placeholder
+                populateSelectOptions('demandBrand', filterOptions.brands || []);
+                populateSelectOptions('demandCountry', filterOptions.countries || []);
                 
                 // Load initial results
                 performFilter();
@@ -567,26 +619,53 @@
                     url = `/api/demand?startDate=${startDate}&endDate=${endDate}`;
                 }
 
-                // Add multi-select filters
-                const manufacturers = getSelectedMultiValues('demandManufacturer');
-                const segTypes = getSelectedMultiValues('demandSegType');
-                const coatings = getSelectedMultiValues('demandCoating');
-                const bases = getSelectedMultiValues('demandBase');
+                // Collect all filter values
+                const filters = {
+                    manufacturers: getSelectedMultiValues('demandManufacturer'),
+                    lensTypes: getSelectedMultiValues('demandLensType'),
+                    lensSubtypes: getSelectedMultiValues('demandLensSubtype'),
+                    coatings: getSelectedMultiValues('demandCoating'),
+                    colors: getSelectedMultiValues('demandColor'),
+                    bases: getSelectedMultiValues('demandBase'),
+                    adds: getSelectedMultiValues('demandAdd'),
+                    diameters: getSelectedMultiValues('demandDiameter'),
+                    materials: getSelectedMultiValues('demandMaterial'),
+                    lensForms: getSelectedMultiValues('demandLensForm'),
+                    brands: getSelectedMultiValues('demandBrand'),
+                    countries: getSelectedMultiValues('demandCountry')
+                };
 
-                if (manufacturers.length > 0) url += `&manufacturers=${manufacturers.join(',')}`;
-                if (segTypes.length > 0) url += `&segTypes=${segTypes.join(',')}`;
-                if (coatings.length > 0) url += `&coatings=${coatings.join(',')}`;
-                if (bases.length > 0) url += `&bases=${bases.join(',')}`;
+                // Add to URL
+                if (filters.manufacturers.length > 0) url += `&manufacturers=${filters.manufacturers.join(',')}`;
+                if (filters.lensTypes.length > 0) url += `&segTypes=${filters.lensTypes.join(',')}`;
+                if (filters.lensSubtypes.length > 0) url += `&segLenses=${filters.lensSubtypes.join(',')}`;
+                if (filters.coatings.length > 0) url += `&coatings=${filters.coatings.join(',')}`;
+                if (filters.colors.length > 0) url += `&colors=${filters.colors.join(',')}`;
+                if (filters.bases.length > 0) url += `&bases=${filters.bases.join(',')}`;
+                if (filters.adds.length > 0) url += `&adds=${filters.adds.join(',')}`;
+                if (filters.diameters.length > 0) url += `&diameters=${filters.diameters.join(',')}`;
+                if (filters.materials.length > 0) url += `&materials=${filters.materials.join(',')}`;
+                if (filters.lensForms.length > 0) url += `&lensForms=${filters.lensForms.join(',')}`;
+                if (filters.brands.length > 0) url += `&brands=${filters.brands.join(',')}`;
+                if (filters.countries.length > 0) url += `&countries=${filters.countries.join(',')}`;
 
                 const response = await fetch(url);
                 const data = await response.json();
 
                 // Display active filters
                 let activeFiltersHtml = '';
-                if (manufacturers.length > 0) activeFiltersHtml += `<strong>Manufacturers:</strong> ${manufacturers.join(', ')}<br>`;
-                if (segTypes.length > 0) activeFiltersHtml += `<strong>Seg Types:</strong> ${segTypes.join(', ')}<br>`;
-                if (coatings.length > 0) activeFiltersHtml += `<strong>Coatings:</strong> ${coatings.join(', ')}<br>`;
-                if (bases.length > 0) activeFiltersHtml += `<strong>Bases:</strong> ${bases.join(', ')}<br>`;
+                if (filters.manufacturers.length > 0) activeFiltersHtml += `<strong>Manufacturer:</strong> ${filters.manufacturers.join(', ')}<br>`;
+                if (filters.lensTypes.length > 0) activeFiltersHtml += `<strong>Lens Type:</strong> ${filters.lensTypes.join(', ')}<br>`;
+                if (filters.lensSubtypes.length > 0) activeFiltersHtml += `<strong>Lens Subtype:</strong> ${filters.lensSubtypes.join(', ')}<br>`;
+                if (filters.coatings.length > 0) activeFiltersHtml += `<strong>Coating:</strong> ${filters.coatings.join(', ')}<br>`;
+                if (filters.colors.length > 0) activeFiltersHtml += `<strong>Color:</strong> ${filters.colors.join(', ')}<br>`;
+                if (filters.bases.length > 0) activeFiltersHtml += `<strong>Base:</strong> ${filters.bases.join(', ')}<br>`;
+                if (filters.adds.length > 0) activeFiltersHtml += `<strong>Add:</strong> ${filters.adds.join(', ')}<br>`;
+                if (filters.diameters.length > 0) activeFiltersHtml += `<strong>Diameter:</strong> ${filters.diameters.join(', ')}<br>`;
+                if (filters.materials.length > 0) activeFiltersHtml += `<strong>Material:</strong> ${filters.materials.join(', ')}<br>`;
+                if (filters.lensForms.length > 0) activeFiltersHtml += `<strong>Lens Form:</strong> ${filters.lensForms.join(', ')}<br>`;
+                if (filters.brands.length > 0) activeFiltersHtml += `<strong>Brand:</strong> ${filters.brands.join(', ')}<br>`;
+                if (filters.countries.length > 0) activeFiltersHtml += `<strong>Country:</strong> ${filters.countries.join(', ')}<br>`;
                 document.getElementById('activeFilters').innerHTML = activeFiltersHtml;
                 
                 // Display summary stats
@@ -609,55 +688,41 @@
                 `;
                 document.getElementById('demandStats').innerHTML = statsHtml;
 
-                // Display breakdowns
+                // Display breakdowns dynamically (before top manufacturers section)
+                let breakdownHtml = '';
                 if (data.breakdowns) {
-                    if (data.breakdowns.byManufacturer && data.breakdowns.byManufacturer.length > 0) {
-                        document.getElementById('breakdownsByManufacturer').style.display = 'block';
-                        let html = '<table><thead><tr><th>Manufacturer</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
-                        data.breakdowns.byManufacturer.forEach(item => {
-                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
-                        });
-                        html += '</tbody></table>';
-                        document.getElementById('breakdownMfgResults').innerHTML = html;
-                    } else {
-                        document.getElementById('breakdownsByManufacturer').style.display = 'none';
-                    }
+                    const breakdownLabels = {
+                        byManufacturer: 'Manufacturer',
+                        byLensType: 'Lens Type',
+                        byLensSubtype: 'Lens Subtype',
+                        byCoating: 'Coating',
+                        byColor: 'Color',
+                        byBase: 'Base',
+                        byAdd: 'Add',
+                        byDiameter: 'Diameter',
+                        byMaterial: 'Material',
+                        byLensForm: 'Lens Form',
+                        byBrand: 'Brand',
+                        byCountry: 'Country'
+                    };
 
-                    if (data.breakdowns.bySegType && data.breakdowns.bySegType.length > 0) {
-                        document.getElementById('breakdownsBySegType').style.display = 'block';
-                        let html = '<table><thead><tr><th>Seg Type</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
-                        data.breakdowns.bySegType.forEach(item => {
-                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
-                        });
-                        html += '</tbody></table>';
-                        document.getElementById('breakdownSegTypeResults').innerHTML = html;
-                    } else {
-                        document.getElementById('breakdownsBySegType').style.display = 'none';
+                    // Render each breakdown
+                    for (const [breakdownKey, items] of Object.entries(data.breakdowns)) {
+                        if (items && items.length > 0) {
+                            const label = breakdownLabels[breakdownKey] || breakdownKey;
+                            breakdownHtml += `<h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand by ${label}</h3>`;
+                            breakdownHtml += '<table><thead><tr><th>' + label + '</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                            items.forEach(item => {
+                                breakdownHtml += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                            });
+                            breakdownHtml += '</tbody></table>';
+                        }
                     }
+                }
 
-                    if (data.breakdowns.byCoating && data.breakdowns.byCoating.length > 0) {
-                        document.getElementById('breakdownsByCoating').style.display = 'block';
-                        let html = '<table><thead><tr><th>Coating</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
-                        data.breakdowns.byCoating.forEach(item => {
-                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
-                        });
-                        html += '</tbody></table>';
-                        document.getElementById('breakdownCoatingResults').innerHTML = html;
-                    } else {
-                        document.getElementById('breakdownsByCoating').style.display = 'none';
-                    }
-
-                    if (data.breakdowns.byBase && data.breakdowns.byBase.length > 0) {
-                        document.getElementById('breakdownsByBase').style.display = 'block';
-                        let html = '<table><thead><tr><th>Base</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
-                        data.breakdowns.byBase.forEach(item => {
-                            html += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
-                        });
-                        html += '</tbody></table>';
-                        document.getElementById('breakdownBaseResults').innerHTML = html;
-                    } else {
-                        document.getElementById('breakdownsByBase').style.display = 'none';
-                    }
+                // Insert breakdowns before top manufacturers section
+                if (breakdownHtml) {
+                    document.getElementById('topMfgResults').insertAdjacentHTML('beforebegin', breakdownHtml);
                 }
 
                 // Top manufacturers
@@ -694,9 +759,17 @@
 
         function clearDemandFilters() {
             document.getElementById('demandManufacturer').selectedIndex = -1;
-            document.getElementById('demandSegType').selectedIndex = -1;
+            document.getElementById('demandLensType').selectedIndex = -1;
+            document.getElementById('demandLensSubtype').selectedIndex = -1;
             document.getElementById('demandCoating').selectedIndex = -1;
+            document.getElementById('demandColor').selectedIndex = -1;
             document.getElementById('demandBase').selectedIndex = -1;
+            document.getElementById('demandAdd').selectedIndex = -1;
+            document.getElementById('demandDiameter').selectedIndex = -1;
+            document.getElementById('demandMaterial').selectedIndex = -1;
+            document.getElementById('demandLensForm').selectedIndex = -1;
+            document.getElementById('demandBrand').selectedIndex = -1;
+            document.getElementById('demandCountry').selectedIndex = -1;
             document.getElementById('activeFilters').innerHTML = '';
             calculateDemand();
         }
