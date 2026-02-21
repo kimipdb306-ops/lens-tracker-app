@@ -311,7 +311,7 @@ app.get('/api/demand', (req, res) => {
     const topMovers = filteredDemandData.slice(0, 10);
     
     // Get top manufacturers by demand
-    const topMfgs = Object.entries(manufacturerDemand)
+    const topMfgs = Object.entries(aggregations.manufacturer)
       .map(([mfg, demand]) => ({ manufacturer: mfg, demand: Math.round(demand) }))
       .sort((a, b) => b.demand - a.demand)
       .slice(0, 10);
