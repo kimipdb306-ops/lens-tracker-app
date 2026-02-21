@@ -1,8 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-const XLSX = require('xlsx');
 const path = require('path');
-const fs = require('fs');
+
+// Load pre-processed data
+let allData = [];
+try {
+  allData = require('./data.js');
+  console.log(`✅ Loaded ${allData.length} records from data.js`);
+} catch (err) {
+  console.warn('⚠️  data.js not found, running in demo mode');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,61 +19,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Data store
-let allData = [];
+// Pre-compute filter options
 let cachedOptions = null;
-let dataLoaded = false;
-
-/**
- * Load inventory data from Excel
- */
-function loadInventoryData() {
-  try {
-    // Try multiple paths
-    const paths = [
-      path.join(process.env.HOME || '/home/node', '.openclaw/workspace/inventory/Global_SKUs_with_Inventory.xlsx'),
-      path.join(__dirname, 'data', 'Global_SKUs_with_Inventory.xlsx'),
-      path.join(__dirname, 'Global_SKUs_with_Inventory.xlsx'),
-      '/tmp/Global_SKUs_with_Inventory.xlsx'
-    ];
-
-    let filePath = null;
-    for (const p of paths) {
-      if (fs.existsSync(p)) {
-        filePath = p;
-        break;
-      }
-    }
-
-    if (!filePath) {
-      console.warn('⚠️  Excel file not found at any path');
-      return false;
-    }
-
-    console.log('📖 Loading from:', filePath);
-    const workbook = XLSX.readFile(filePath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    allData = XLSX.utils.sheet_to_json(sheet);
-    
-    console.log(`✅ Loaded ${allData.length} SKU records`);
-    
-    // Pre-compute filter options
-    console.log('📊 Computing filter options...');
-    cachedOptions = computeFilterOptions();
-    console.log('✅ Options ready');
-    
-    dataLoaded = true;
-    return true;
-  } catch (error) {
-    console.error('❌ Error loading data:', error.message);
-    return false;
-  }
-}
-
-/**
- * Compute unique filter values
- */
 function computeFilterOptions() {
+  if (!allData.length) return null;
+  
   const sets = {
     bases: new Set(),
     adds: new Set(),
@@ -112,13 +69,19 @@ function computeFilterOptions() {
   };
 }
 
+// Compute on startup
+if (allData.length > 0) {
+  cachedOptions = computeFilterOptions();
+  console.log('✅ Filter options cached');
+}
+
 /**
  * API: /api/filter - Filter lenses
  */
 app.get('/api/filter', (req, res) => {
   try {
-    if (!dataLoaded) {
-      return res.json({ count: 0, totalInventory: 0, results: [], message: 'Data not loaded' });
+    if (!allData.length) {
+      return res.json({ count: 0, totalInventory: 0, results: [] });
     }
 
     const filters = req.query;
@@ -178,7 +141,7 @@ app.get('/api/options', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    dataLoaded,
+    dataLoaded: allData.length > 0,
     totalSKUs: allData.length,
     port: PORT
   });
@@ -194,18 +157,16 @@ app.get('/', (req, res) => {
 /**
  * Start server
  */
-async function start() {
-  app.listen(PORT, () => {
-    console.log(`\n=================================`);
-    console.log(`🔗 Lens Tracker - LIVE`);
-    console.log(`=================================`);
-    console.log(`✅ Server on port ${PORT}`);
-    console.log(`📍 https://web-production-c5c4b.up.railway.app`);
-    console.log(`=================================\n`);
-    
-    // Load data asynchronously
-    loadInventoryData();
-  });
-}
-
-start();
+app.listen(PORT, () => {
+  console.log(`\n=================================`);
+  console.log(`🔗 Lens Tracker - LIVE`);
+  console.log(`=================================`);
+  console.log(`✅ Server on port ${PORT}`);
+  if (allData.length > 0) {
+    console.log(`📊 ${allData.length} SKUs loaded`);
+  } else {
+    console.log(`⚠️  No data loaded`);
+  }
+  console.log(`📍 https://web-production-c5c4b.up.railway.app`);
+  console.log(`=================================\n`);
+});
