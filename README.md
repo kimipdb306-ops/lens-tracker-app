@@ -197,3 +197,4 @@ All rights reserved. Global Optics inventory system.
 ## Support
 
 For issues or questions, please contact the development team.
+# Force rebuild at Fri Feb 20 22:18:07 EST 2026
