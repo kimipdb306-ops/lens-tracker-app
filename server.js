@@ -159,11 +159,15 @@ app.get('/', (req, res) => {
  */
 app.listen(PORT, () => {
   console.log(`\n=================================`);
-  console.log(`🔗 Lens Tracker - LIVE`);
+  console.log(`🔗 Lens Tracker - LIVE (v2)`);
   console.log(`=================================`);
   console.log(`✅ Server on port ${PORT}`);
   if (allData.length > 0) {
     console.log(`📊 ${allData.length} SKUs loaded`);
+    const apolloInv = allData
+      .filter(x => x.MFG === 'Apollo')
+      .reduce((s, x) => s + (x['Current Inventory'] || 0), 0);
+    console.log(`📊 Apollo inventory: ${apolloInv} units`);
   } else {
     console.log(`⚠️  No data loaded`);
   }
