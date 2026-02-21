@@ -383,11 +383,11 @@ app.get('/api/demand', (req, res) => {
       })).sort((a, b) => b.demand - a.demand);
     }
 
-    if (selectedMaterials.length > 0) {
-      breakdowns.byMaterial = selectedMaterials.map(m => ({
-        name: m,
-        demand: Math.round(aggregations.material[m] || 0),
-        skus: filteredDemandData.filter(x => x.material === m).length
+    if (selectedMaterialIds.length > 0) {
+      breakdowns.byMaterialId = selectedMaterialIds.map(mid => ({
+        name: mid,
+        demand: Math.round(aggregations.materialId[mid] || 0),
+        skus: filteredDemandData.filter(x => x.materialId === mid).length
       })).sort((a, b) => b.demand - a.demand);
     }
 
