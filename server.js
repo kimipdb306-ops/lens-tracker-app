@@ -16,15 +16,15 @@ const PORT = process.env.PORT || 3000;
 
 // Lookup tables for code mappings
 const materialIdMap = {
-  '1.00': 'Polycarbonate',
-  '2.00': 'CR39',
-  '3.00': 'Glass',
-  '4.00': '1.55 Mid Index',
-  '5.00': '1.60 High Index',
-  '6.00': 'Glass',
-  '8.00': '1.74 High Index',
-  '9.00': 'Trivex',
-  '10.00': '1.67 High Index'
+  '1': 'Polycarbonate',
+  '2': 'CR39',
+  '3': 'Glass',
+  '4': '1.55 Mid Index',
+  '5': '1.60 High Index',
+  '6': 'Glass',
+  '8': '1.74 High Index',
+  '9': 'Trivex',
+  '10': '1.67 High Index'
 };
 
 const productTypeMap = {

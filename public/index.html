@@ -15,31 +15,33 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
         .header {
             background: white;
             border-radius: 8px;
-            padding: 30px;
-            margin-bottom: 20px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
 
         .header h1 {
             color: #333;
-            margin-bottom: 5px;
-            font-size: 2em;
+            margin-bottom: 2px;
+            margin-top: 0;
+            font-size: 1.5em;
         }
 
         .header p {
             color: #666;
-            font-size: 1em;
+            font-size: 0.9em;
+            margin: 0;
         }
 
         .tabs {
@@ -81,38 +83,43 @@
 
         .content-grid {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
+            grid-template-columns: 280px 1fr;
+            gap: 15px;
+        }
+
+        #demand .content-grid {
+            grid-template-columns: 250px 1fr;
         }
 
         .sidebar {
             background: white;
             border-radius: 8px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             height: fit-content;
             position: sticky;
-            top: 20px;
+            top: 15px;
         }
 
         .sidebar h2 {
             color: #333;
-            margin-bottom: 20px;
-            font-size: 1.2em;
+            margin-bottom: 12px;
+            margin-top: 0;
+            font-size: 1em;
             border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .form-group label {
             display: block;
             color: #555;
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.9em;
+            margin-bottom: 4px;
+            font-size: 0.8em;
         }
 
         .form-group select,
@@ -167,45 +174,46 @@
         .results {
             background: white;
             border-radius: 8px;
-            padding: 30px;
+            padding: 15px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
 
         .results-header {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #eee;
         }
 
         .results-header h3 {
             color: #333;
-            font-size: 1.3em;
-            margin-bottom: 10px;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            margin-top: 0;
         }
 
         .results-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         .stat-card {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 10px;
             border-radius: 6px;
-            border-left: 4px solid #667eea;
+            border-left: 3px solid #667eea;
         }
 
         .stat-card label {
             display: block;
             color: #666;
-            font-size: 0.85em;
-            margin-bottom: 5px;
+            font-size: 0.75em;
+            margin-bottom: 3px;
         }
 
         .stat-card .value {
-            font-size: 1.8em;
+            font-size: 1.4em;
             font-weight: bold;
             color: #333;
         }
@@ -213,12 +221,13 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 8px;
+            font-size: 0.9em;
         }
 
         th {
             background: #f8f9fa;
-            padding: 12px;
+            padding: 8px;
             text-align: left;
             font-weight: 600;
             color: #333;
@@ -226,7 +235,7 @@
         }
 
         td {
-            padding: 12px;
+            padding: 6px 8px;
             border-bottom: 1px solid #eee;
         }
 
@@ -280,7 +289,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Global Optics Lens Tracker</h1>
+            <h1>Global Optics Lens Tracker</h1>
             <p>Real-time inventory and demand analytics for 103,123+ lens SKUs</p>
         </div>
 
@@ -474,10 +483,7 @@
 
                     <div class="results-stats" id="demandStats"></div>
 
-                    <h3 style="margin-top: 30px; margin-bottom: 20px;">🏆 Top Manufacturers by Demand</h3>
                     <div id="topMfgResults"></div>
-
-                    <h3 style="margin-top: 30px; margin-bottom: 20px;">⭐ Top 20 Most Demanded SKUs</h3>
                     <div id="demandResults"></div>
                 </div>
             </div>
@@ -696,13 +702,13 @@
                 `;
                 document.getElementById('demandStats').innerHTML = statsHtml;
 
-                // Display breakdowns dynamically (before top manufacturers section)
-                // Prioritize: Manufacturer, Material ID, Lens Type (show top 5 each)
-                let breakdownHtml = '';
+                // Display breakdowns dynamically in 3-column grid layout
+                // Prioritize: Manufacturer, Material, Lens Type (show top 5 each)
+                let breakdownHtml = '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; margin-bottom: 30px;">';
                 if (data.breakdowns) {
                     const breakdownLabels = {
-                        byManufacturer: 'Manufacturer',
-                        byLensType: 'Lens Type',
+                        byManufacturer: 'Top 5 Manufacturers',
+                        byLensType: 'Top 5 Lens Types',
                         byLensSubtype: 'Lens Subtype',
                         byCoating: 'Coating',
                         byColor: 'Color',
@@ -710,41 +716,46 @@
                         byAdd: 'Add',
                         byDiameter: 'Diameter',
                         byProductType: 'Product Type',
-                        byMaterialId: 'Material ID',
+                        byMaterialId: 'Top 5 Materials',
                         byBrand: 'Brand',
                         byCountry: 'Country'
                     };
 
-                    // Priority order for default display
+                    // Priority order for default display - grid layout
                     const priorityOrder = ['byManufacturer', 'byMaterialId', 'byLensType'];
                     
-                    // Render priority breakdowns first (top 5 each)
+                    // Render priority breakdowns in 3-column grid (top 5 each)
                     for (const breakdownKey of priorityOrder) {
                         const items = data.breakdowns[breakdownKey];
                         if (items && items.length > 0) {
                             const label = breakdownLabels[breakdownKey] || breakdownKey;
-                            breakdownHtml += `<h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Top 5 by ${label}</h3>`;
-                            breakdownHtml += '<table><thead><tr><th>' + label + '</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                            breakdownHtml += `<div style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; background: #f9f9f9;">`;
+                            breakdownHtml += `<h4 style="margin-top: 0; margin-bottom: 15px; font-size: 0.95em;">${label}</h4>`;
+                            breakdownHtml += '<table style="width: 100%; font-size: 0.85em;"><thead style="display: none;"><tr><th>Name</th><th>Demand</th></tr></thead><tbody>';
                             items.slice(0, 5).forEach(item => {
-                                breakdownHtml += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                                breakdownHtml += `<tr><td style="padding: 6px 0;"><strong>${item.name}</strong></td><td style="text-align: right; padding: 6px 0;">${item.demand.toLocaleString()}</td></tr>`;
                             });
                             breakdownHtml += '</tbody></table>';
+                            breakdownHtml += '</div>';
                         }
                     }
 
-                    // Render other breakdowns (all items)
+                    // Render other breakdowns if filters applied
                     for (const [breakdownKey, items] of Object.entries(data.breakdowns)) {
                         if (!priorityOrder.includes(breakdownKey) && items && items.length > 0) {
                             const label = breakdownLabels[breakdownKey] || breakdownKey;
-                            breakdownHtml += `<h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand by ${label}</h3>`;
-                            breakdownHtml += '<table><thead><tr><th>' + label + '</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                            breakdownHtml += `<div style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; background: #f9f9f9;">`;
+                            breakdownHtml += `<h4 style="margin-top: 0; margin-bottom: 15px; font-size: 0.95em;">Demand by ${label}</h4>`;
+                            breakdownHtml += '<table style="width: 100%; font-size: 0.85em;"><tbody>';
                             items.forEach(item => {
-                                breakdownHtml += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                                breakdownHtml += `<tr><td style="padding: 4px 0;"><strong>${item.name}</strong></td><td style="text-align: right; padding: 4px 0;">${item.demand.toLocaleString()}</td></tr>`;
                             });
                             breakdownHtml += '</tbody></table>';
+                            breakdownHtml += '</div>';
                         }
                     }
                 }
+                breakdownHtml += '</div>';
 
                 // Insert breakdowns before top manufacturers section
                 if (breakdownHtml) {
