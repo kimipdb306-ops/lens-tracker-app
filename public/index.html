@@ -297,8 +297,10 @@
         }
 
         .select-all-btn {
-            padding: 3px 6px;
-            font-size: 0.7em;
+            width: 32px;
+            height: 20px;
+            padding: 0;
+            font-size: 0.65em;
             background: #667eea;
             color: white;
             border: none;
@@ -306,15 +308,23 @@
             cursor: pointer;
             font-weight: 600;
             transition: background 0.2s;
-            height: 24px;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            line-height: 1;
         }
 
         .select-all-btn:hover {
             background: #764ba2;
+        }
+
+        .filter-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
         }
     </style>
 </head>
@@ -404,7 +414,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandManufacturer">Manufacturer</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandManufacturer')">All</button>
                         </div>
@@ -412,7 +422,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandLensType">Lens Type</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandLensType')">All</button>
                         </div>
@@ -420,7 +430,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandLensSubtype">Lens Subtype</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandLensSubtype')">All</button>
                         </div>
@@ -428,7 +438,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandCoating">Coating</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandCoating')">All</button>
                         </div>
@@ -436,7 +446,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandColor">Color</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandColor')">All</button>
                         </div>
@@ -444,7 +454,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandBase">Base</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandBase')">All</button>
                         </div>
@@ -452,7 +462,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandAdd">Add</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandAdd')">All</button>
                         </div>
@@ -460,7 +470,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandDiameter">Diameter</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandDiameter')">All</button>
                         </div>
@@ -468,7 +478,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandProductType">Product Type</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandProductType')">All</button>
                         </div>
@@ -476,7 +486,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandMaterialId">Material</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandMaterialId')">All</button>
                         </div>
@@ -484,7 +494,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandBrand">Brand</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandBrand')">All</button>
                         </div>
@@ -492,7 +502,7 @@
                     </div>
 
                     <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div class="filter-label-row">
                             <label for="demandCountry">Country of Origin</label>
                             <button type="button" class="select-all-btn" onclick="selectAllInDropdown('demandCountry')">All</button>
                         </div>
