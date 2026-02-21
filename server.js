@@ -3,7 +3,6 @@ const cors = require('cors');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
-const { Pool } = require('pg');
 require('dotenv').config();
 
 const app = express();
@@ -14,77 +13,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database configuration
-let db = null;
+// Load data from Excel file
 let allData = [];
 let cachedOptions = null;
-let usePostgres = !!process.env.DATABASE_URL;
 
-// PostgreSQL connection pool
-if (usePostgres) {
-  db = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10,
-  });
-
-  db.on('error', (err) => {
-    console.error('Unexpected error on idle client', err);
-  });
-}
-
-/**
- * Initialize database
- */
-async function initDatabase() {
-  if (usePostgres) {
-    try {
-      const client = await db.connect();
-      console.log('✅ Connected to PostgreSQL');
-      client.release();
-
-      // Create table if it doesn't exist
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS lenses (
-          id SERIAL PRIMARY KEY,
-          sku TEXT UNIQUE NOT NULL,
-          description TEXT,
-          base FLOAT,
-          add FLOAT,
-          seg_type TEXT,
-          seg_lens TEXT,
-          coating TEXT,
-          color TEXT,
-          diameter FLOAT,
-          manufacturer TEXT,
-          brand TEXT,
-          country_origin TEXT,
-          inventory INTEGER DEFAULT 0,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_base ON lenses(base);
-        CREATE INDEX IF NOT EXISTS idx_add ON lenses(add);
-        CREATE INDEX IF NOT EXISTS idx_diameter ON lenses(diameter);
-        CREATE INDEX IF NOT EXISTS idx_manufacturer ON lenses(manufacturer);
-        CREATE INDEX IF NOT EXISTS idx_sku ON lenses(sku);
-      `);
-
-      console.log('✅ Database tables ready');
-      return true;
-    } catch (err) {
-      console.error('❌ PostgreSQL connection failed:', err.message);
-      console.error('Falling back to Excel mode');
-      usePostgres = false;
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * Load data from Excel (fallback or initial mode)
- */
 function loadInventoryData() {
   try {
     let filePath = path.join(process.env.HOME || '/home/node', '.openclaw/workspace/inventory/Global_SKUs_with_Inventory.xlsx');
@@ -121,9 +53,7 @@ function loadInventoryData() {
   }
 }
 
-/**
- * Get unique values for dropdowns (for Excel mode)
- */
+// Get unique values for dropdowns
 function getUniqueValuesForAllFilters() {
   const uniqueSets = {
     bases: new Set(),
@@ -151,7 +81,6 @@ function getUniqueValuesForAllFilters() {
     if (item['Country Origin']) uniqueSets.countries.add(String(item['Country Origin']).trim());
   });
 
-  // Convert sets to sorted arrays
   return {
     bases: Array.from(uniqueSets.bases).sort((a, b) => {
       const numA = parseFloat(a);
@@ -178,96 +107,10 @@ function getUniqueValuesForAllFilters() {
   };
 }
 
-/**
- * Get filter options from PostgreSQL
- */
-async function getPostgresFilterOptions() {
+// Filter endpoint
+app.get('/api/filter', (req, res) => {
   try {
-    const options = {};
-    const fields = ['base', 'add', 'seg_type', 'seg_lens', 'coating', 'color', 'diameter', 'manufacturer', 'brand', 'country_origin'];
-
-    for (const field of fields) {
-      const result = await db.query(`
-        SELECT DISTINCT ${field} FROM lenses 
-        WHERE ${field} IS NOT NULL 
-        ORDER BY ${field}
-      `);
-      options[field] = result.rows.map(r => r[field]).filter(v => v !== null);
-    }
-
-    return {
-      bases: options.base || [],
-      adds: options.add || [],
-      segTypes: options.seg_type || [],
-      segLenses: options.seg_lens || [],
-      coatings: options.coating || [],
-      colors: options.color || [],
-      diameters: options.diameter || [],
-      manufacturers: options.manufacturer || [],
-      brands: options.brand || [],
-      countries: options.country_origin || []
-    };
-  } catch (err) {
-    console.error('Error fetching Postgres filter options:', err);
-    throw err;
-  }
-}
-
-/**
- * Filter API endpoint - PostgreSQL version
- */
-async function filterLensesPostgres(filters) {
-  try {
-    let sql = 'SELECT sku, description, SUM(inventory) as totalInventory FROM lenses WHERE 1=1';
-    const params = [];
-    let paramCount = 1;
-
-    const filterMap = {
-      base: 'base',
-      add: 'add',
-      segType: 'seg_type',
-      segLens: 'seg_lens',
-      coating: 'coating',
-      color: 'color',
-      diameter: 'diameter',
-      manufacturer: 'manufacturer',
-      brand: 'brand',
-      country: 'country_origin'
-    };
-
-    for (const [key, value] of Object.entries(filters)) {
-      if (value && filterMap[key]) {
-        sql += ` AND ${filterMap[key]} = $${paramCount}`;
-        params.push(value);
-        paramCount++;
-      }
-    }
-
-    sql += ' GROUP BY sku, description ORDER BY totalInventory DESC LIMIT 500';
-
-    const result = await db.query(sql, params);
-    const results = result.rows.map(row => ({
-      sku: row.sku,
-      description: row.description,
-      totalInventory: row.totalinventory
-    }));
-
-    return {
-      count: results.length,
-      totalInventory: results.reduce((sum, item) => sum + item.totalInventory, 0),
-      results: results
-    };
-  } catch (err) {
-    console.error('Error filtering lenses from Postgres:', err);
-    throw err;
-  }
-}
-
-/**
- * Filter API endpoint - Excel version
- */
-function filterLensesExcel(filters) {
-  try {
+    const filters = req.query;
     const inventoryKey = 'Current Inventory (02/19/26)';
 
     let results = allData.filter(item => {
@@ -285,7 +128,6 @@ function filterLensesExcel(filters) {
       return true;
     });
 
-    // Group by ItemNumber and sum inventory
     const groupedResults = {};
     results.forEach(item => {
       const sku = item.ItemNumber;
@@ -302,31 +144,11 @@ function filterLensesExcel(filters) {
     const finalResults = Object.values(groupedResults)
       .sort((a, b) => b.totalInventory - a.totalInventory);
 
-    return {
+    res.json({
       count: finalResults.length,
       totalInventory: finalResults.reduce((sum, item) => sum + item.totalInventory, 0),
       results: finalResults.slice(0, 500)
-    };
-  } catch (error) {
-    console.error('Filter error:', error);
-    throw error;
-  }
-}
-
-/**
- * API Routes
- */
-
-// Filter endpoint
-app.get('/api/filter', async (req, res) => {
-  try {
-    const filters = req.query;
-    
-    const result = usePostgres 
-      ? await filterLensesPostgres(filters)
-      : filterLensesExcel(filters);
-
-    res.json(result);
+    });
   } catch (error) {
     console.error('Filter error:', error);
     res.status(500).json({ error: error.message });
@@ -334,16 +156,12 @@ app.get('/api/filter', async (req, res) => {
 });
 
 // Get filter options
-app.get('/api/options', async (req, res) => {
+app.get('/api/options', (req, res) => {
   try {
-    const options = usePostgres
-      ? await getPostgresFilterOptions()
-      : cachedOptions;
-
-    if (!options) {
-      return res.status(503).json({ error: 'Options not yet available' });
+    if (!cachedOptions) {
+      return res.status(503).json({ error: 'Options not yet cached' });
     }
-    res.json(options);
+    res.json(cachedOptions);
   } catch (error) {
     console.error('Options error:', error);
     res.status(500).json({ error: error.message });
@@ -351,33 +169,12 @@ app.get('/api/options', async (req, res) => {
 });
 
 // Health check
-app.get('/api/health', async (req, res) => {
-  try {
-    let dataLoaded = true;
-    let totalSKUs = 0;
-    let dataSource = 'excel';
-
-    if (usePostgres && db) {
-      dataSource = 'postgresql';
-      const result = await db.query('SELECT COUNT(*) as count FROM lenses');
-      totalSKUs = parseInt(result.rows[0].count);
-    } else {
-      totalSKUs = allData.length;
-    }
-
-    res.json({
-      status: 'ok',
-      dataLoaded: dataLoaded,
-      totalSKUs: totalSKUs,
-      dataSource: dataSource
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'error',
-      message: err.message,
-      dataSource: usePostgres ? 'postgresql' : 'excel'
-    });
-  }
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    dataLoaded: allData.length > 0,
+    totalSKUs: allData.length
+  });
 });
 
 // Serve index.html
@@ -385,55 +182,12 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-/**
- * Start server
- */
-async function start() {
-  try {
-    // Initialize database
-    const dbReady = await initDatabase();
-
-    // Load Excel data as fallback
-    const excelLoaded = loadInventoryData();
-
-    if (!dbReady && !excelLoaded) {
-      console.error('❌ No data source available!');
-      process.exit(1);
-    }
-
-    const dataSource = usePostgres && dbReady ? 'PostgreSQL' : 'Excel';
-    console.log(`\n=================================`);
-    console.log(`Lens Tracker Server`);
-    console.log(`Data Source: ${dataSource}`);
-    console.log(`=================================`);
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`📍 http://localhost:${PORT}`);
-      console.log(`📊 API: http://localhost:${PORT}/api`);
-      console.log(`=================================\n`);
-    });
-  } catch (err) {
-    console.error('Failed to start server:', err);
-    process.exit(1);
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  
+  const dataLoaded = loadInventoryData();
+  if (!dataLoaded) {
+    console.warn('⚠️  Warning: Inventory data not loaded. Please ensure the Excel file is accessible.');
   }
-}
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\nShutting down gracefully...');
-  if (db) {
-    await db.end();
-  }
-  process.exit(0);
 });
-
-process.on('SIGTERM', async () => {
-  console.log('\nShutting down gracefully...');
-  if (db) {
-    await db.end();
-  }
-  process.exit(0);
-});
-
-start();
