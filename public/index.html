@@ -49,7 +49,7 @@
         }
 
         .tab-btn {
-            background: white;
+            background: #f5f5f5;
             border: 2px solid #ddd;
             padding: 12px 24px;
             border-radius: 6px;
@@ -57,6 +57,7 @@
             font-size: 1em;
             font-weight: 600;
             transition: all 0.2s;
+            color: #333;
         }
 
         .tab-btn.active {
@@ -67,6 +68,7 @@
 
         .tab-btn:hover {
             border-color: #667eea;
+            color: #333;
         }
 
         .tab-content {
@@ -283,12 +285,12 @@
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('filter')">Filter & Search</button>
-            <button class="tab-btn" onclick="switchTab('demand')">Demand Analytics</button>
+            <button class="tab-btn" onclick="switchTab('filter')">Filter & Search</button>
+            <button class="tab-btn active" onclick="switchTab('demand')">Demand Analytics</button>
         </div>
 
         <!-- FILTER TAB -->
-        <div id="filter" class="tab-content active">
+        <div id="filter" class="tab-content">
             <div class="content-grid">
                 <div class="sidebar">
                     <h2>Filters</h2>
@@ -335,7 +337,7 @@
         </div>
 
         <!-- DEMAND TAB -->
-        <div id="demand" class="tab-content">
+        <div id="demand" class="tab-content active">
             <div class="content-grid">
                 <div class="sidebar">
                     <h2>Demand Analytics</h2>
@@ -512,8 +514,8 @@
                 populateSelectOptions('demandBrand', filterOptions.brands || []);
                 populateSelectOptions('demandCountry', filterOptions.countries || []);
                 
-                // Load initial results
-                performFilter();
+                // Load initial demand results
+                calculateDemand();
             } catch (error) {
                 console.error('Error loading options:', error);
             }
@@ -695,6 +697,7 @@
                 document.getElementById('demandStats').innerHTML = statsHtml;
 
                 // Display breakdowns dynamically (before top manufacturers section)
+                // Prioritize: Manufacturer, Material ID, Lens Type (show top 5 each)
                 let breakdownHtml = '';
                 if (data.breakdowns) {
                     const breakdownLabels = {
@@ -712,9 +715,26 @@
                         byCountry: 'Country'
                     };
 
-                    // Render each breakdown
-                    for (const [breakdownKey, items] of Object.entries(data.breakdowns)) {
+                    // Priority order for default display
+                    const priorityOrder = ['byManufacturer', 'byMaterialId', 'byLensType'];
+                    
+                    // Render priority breakdowns first (top 5 each)
+                    for (const breakdownKey of priorityOrder) {
+                        const items = data.breakdowns[breakdownKey];
                         if (items && items.length > 0) {
+                            const label = breakdownLabels[breakdownKey] || breakdownKey;
+                            breakdownHtml += `<h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Top 5 by ${label}</h3>`;
+                            breakdownHtml += '<table><thead><tr><th>' + label + '</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
+                            items.slice(0, 5).forEach(item => {
+                                breakdownHtml += `<tr><td><strong>${item.name}</strong></td><td>${item.demand.toLocaleString()}</td><td>${item.skus}</td></tr>`;
+                            });
+                            breakdownHtml += '</tbody></table>';
+                        }
+                    }
+
+                    // Render other breakdowns (all items)
+                    for (const [breakdownKey, items] of Object.entries(data.breakdowns)) {
+                        if (!priorityOrder.includes(breakdownKey) && items && items.length > 0) {
                             const label = breakdownLabels[breakdownKey] || breakdownKey;
                             breakdownHtml += `<h3 style="margin-top: 30px; margin-bottom: 20px;">📊 Demand by ${label}</h3>`;
                             breakdownHtml += '<table><thead><tr><th>' + label + '</th><th>Demand</th><th>SKUs</th></tr></thead><tbody>';
