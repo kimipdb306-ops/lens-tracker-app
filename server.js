@@ -1,71 +1,211 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
+const cors = require('cors');
+const XLSX = require('xlsx');
 const path = require('path');
+const fs = require('fs');
 
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-const server = http.createServer((req, res) => {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
-  res.setHeader('Content-Type', 'application/json');
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-  if (req.url === '/api/health') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ 
-      status: 'ok',
-      port: PORT,
-      uptime: process.uptime()
-    }));
-  } else if (req.url === '/api/options') {
-    res.writeHead(200);
-    res.end(JSON.stringify({
-      bases: [],
-      adds: [],
-      segTypes: [],
-      segLenses: [],
-      coatings: [],
-      colors: [],
-      diameters: [],
-      manufacturers: [],
-      brands: [],
-      countries: []
-    }));
-  } else if (req.url === '/api/filter') {
-    res.writeHead(200);
-    res.end(JSON.stringify({
-      count: 0,
-      totalInventory: 0,
-      results: []
-    }));
-  } else if (req.url === '/' || req.url === '') {
-    // Serve index.html
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    fs.readFile(indexPath, 'utf8', (err, data) => {
-      if (err) {
-        res.setHeader('Content-Type', 'text/html');
-        res.writeHead(200);
-        res.end('<h1>Lens Tracker</h1><p>App is running. Index.html not found.</p>');
-      } else {
-        res.setHeader('Content-Type', 'text/html');
-        res.writeHead(200);
-        res.end(data);
+// Data store
+let allData = [];
+let cachedOptions = null;
+let dataLoaded = false;
+
+/**
+ * Load inventory data from Excel
+ */
+function loadInventoryData() {
+  try {
+    // Try multiple paths
+    const paths = [
+      path.join(process.env.HOME || '/home/node', '.openclaw/workspace/inventory/Global_SKUs_with_Inventory.xlsx'),
+      path.join(__dirname, 'data', 'Global_SKUs_with_Inventory.xlsx'),
+      path.join(__dirname, 'Global_SKUs_with_Inventory.xlsx'),
+      '/tmp/Global_SKUs_with_Inventory.xlsx'
+    ];
+
+    let filePath = null;
+    for (const p of paths) {
+      if (fs.existsSync(p)) {
+        filePath = p;
+        break;
       }
+    }
+
+    if (!filePath) {
+      console.warn('⚠️  Excel file not found at any path');
+      return false;
+    }
+
+    console.log('📖 Loading from:', filePath);
+    const workbook = XLSX.readFile(filePath);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    allData = XLSX.utils.sheet_to_json(sheet);
+    
+    console.log(`✅ Loaded ${allData.length} SKU records`);
+    
+    // Pre-compute filter options
+    console.log('📊 Computing filter options...');
+    cachedOptions = computeFilterOptions();
+    console.log('✅ Options ready');
+    
+    dataLoaded = true;
+    return true;
+  } catch (error) {
+    console.error('❌ Error loading data:', error.message);
+    return false;
+  }
+}
+
+/**
+ * Compute unique filter values
+ */
+function computeFilterOptions() {
+  const sets = {
+    bases: new Set(),
+    adds: new Set(),
+    segTypes: new Set(),
+    segLenses: new Set(),
+    coatings: new Set(),
+    colors: new Set(),
+    diameters: new Set(),
+    manufacturers: new Set(),
+    brands: new Set(),
+    countries: new Set()
+  };
+
+  allData.forEach(item => {
+    if (item.Base !== undefined) sets.bases.add(String(item.Base).trim());
+    if (item.Add !== undefined) sets.adds.add(String(item.Add).trim());
+    if (item['Seg Type']) sets.segTypes.add(String(item['Seg Type']).trim());
+    if (item['Seg Lens']) sets.segLenses.add(String(item['Seg Lens']).trim());
+    if (item.Coating) sets.coatings.add(String(item.Coating).trim());
+    if (item.Color) sets.colors.add(String(item.Color).trim());
+    if (item.Diameter !== undefined) sets.diameters.add(String(item.Diameter).trim());
+    if (item.MFG) sets.manufacturers.add(String(item.MFG).trim());
+    if (item.Brand) sets.brands.add(String(item.Brand).trim());
+    if (item['Country Origin']) sets.countries.add(String(item['Country Origin']).trim());
+  });
+
+  const sortNumeric = (a, b) => {
+    const numA = parseFloat(a), numB = parseFloat(b);
+    return isNaN(numA) ? a.localeCompare(b) : numA - numB;
+  };
+
+  return {
+    bases: Array.from(sets.bases).sort(sortNumeric),
+    adds: Array.from(sets.adds).sort(sortNumeric),
+    segTypes: Array.from(sets.segTypes).sort(),
+    segLenses: Array.from(sets.segLenses).sort(),
+    coatings: Array.from(sets.coatings).sort(),
+    colors: Array.from(sets.colors).sort(),
+    diameters: Array.from(sets.diameters).sort(sortNumeric),
+    manufacturers: Array.from(sets.manufacturers).sort(),
+    brands: Array.from(sets.brands).sort(),
+    countries: Array.from(sets.countries).sort()
+  };
+}
+
+/**
+ * API: /api/filter - Filter lenses
+ */
+app.get('/api/filter', (req, res) => {
+  try {
+    if (!dataLoaded) {
+      return res.json({ count: 0, totalInventory: 0, results: [], message: 'Data not loaded' });
+    }
+
+    const filters = req.query;
+    const inventoryKey = 'Current Inventory (02/19/26)';
+
+    let results = allData.filter(item => {
+      if (filters.base && String(item.Base || '') !== filters.base) return false;
+      if (filters.add && String(item.Add || '') !== filters.add) return false;
+      if (filters.segType && String(item['Seg Type'] || '').trim() !== filters.segType.trim()) return false;
+      if (filters.segLens && String(item['Seg Lens'] || '').trim() !== filters.segLens.trim()) return false;
+      if (filters.coating && String(item.Coating || '').trim() !== filters.coating.trim()) return false;
+      if (filters.color && String(item.Color || '').trim() !== filters.color.trim()) return false;
+      if (filters.diameter && String(item.Diameter || '') !== filters.diameter) return false;
+      if (filters.manufacturer && String(item.MFG || '').trim() !== filters.manufacturer.trim()) return false;
+      if (filters.brand && String(item.Brand || '').trim() !== filters.brand.trim()) return false;
+      if (filters.country && String(item['Country Origin'] || '').trim() !== filters.country.trim()) return false;
+      return true;
     });
-  } else {
-    res.writeHead(404);
-    res.end(JSON.stringify({ error: 'Not found' }));
+
+    const grouped = {};
+    results.forEach(item => {
+      const sku = item.ItemNumber;
+      if (!grouped[sku]) {
+        grouped[sku] = { sku, description: item.ItemDesc, totalInventory: 0 };
+      }
+      grouped[sku].totalInventory += (item[inventoryKey] || 0);
+    });
+
+    const final = Object.values(grouped).sort((a, b) => b.totalInventory - a.totalInventory);
+
+    res.json({
+      count: final.length,
+      totalInventory: final.reduce((sum, item) => sum + item.totalInventory, 0),
+      results: final.slice(0, 500)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+/**
+ * API: /api/options - Get filter dropdowns
+ */
+app.get('/api/options', (req, res) => {
+  if (!cachedOptions) {
+    return res.json({
+      bases: [], adds: [], segTypes: [], segLenses: [], coatings: [],
+      colors: [], diameters: [], manufacturers: [], brands: [], countries: []
+    });
+  }
+  res.json(cachedOptions);
 });
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+/**
+ * API: /api/health - Health check
+ */
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    dataLoaded,
+    totalSKUs: allData.length,
+    port: PORT
   });
 });
+
+/**
+ * Serve index.html
+ */
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+/**
+ * Start server
+ */
+async function start() {
+  app.listen(PORT, () => {
+    console.log(`\n=================================`);
+    console.log(`🔗 Lens Tracker - LIVE`);
+    console.log(`=================================`);
+    console.log(`✅ Server on port ${PORT}`);
+    console.log(`📍 https://web-production-c5c4b.up.railway.app`);
+    console.log(`=================================\n`);
+    
+    // Load data asynchronously
+    loadInventoryData();
+  });
+}
+
+start();
