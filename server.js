@@ -360,14 +360,46 @@ app.get('/api/demand', (req, res) => {
       .slice(0, 10);
 
     // Build breakdown objects for selected filters
+    // If no filters selected, show all aggregations (for default view)
     const breakdowns = {};
 
+    // Show manufacturer breakdown - always on default view
     if (selectedManufacturers.length > 0) {
       breakdowns.byManufacturer = selectedManufacturers.map(mfg => ({
         name: mfg,
         demand: Math.round(aggregations.manufacturer[mfg] || 0),
         skus: filteredDemandData.filter(x => x.manufacturer === mfg).length
       })).sort((a, b) => b.demand - a.demand);
+    } else if (!hasFilters) {
+      breakdowns.byManufacturer = Object.entries(aggregations.manufacturer)
+        .map(([mfg, demand]) => ({ name: mfg, demand: Math.round(demand), skus: demandData.filter(x => x.manufacturer === mfg).length }))
+        .sort((a, b) => b.demand - a.demand);
+    }
+
+    // Show material ID breakdown - always on default view
+    if (selectedMaterialIds.length > 0) {
+      breakdowns.byMaterialId = selectedMaterialIds.map(mid => ({
+        name: mid,
+        demand: Math.round(aggregations.materialId[mid] || 0),
+        skus: filteredDemandData.filter(x => x.materialId === mid).length
+      })).sort((a, b) => b.demand - a.demand);
+    } else if (!hasFilters) {
+      breakdowns.byMaterialId = Object.entries(aggregations.materialId)
+        .map(([mid, demand]) => ({ name: mid, demand: Math.round(demand), skus: demandData.filter(x => x.materialId === mid).length }))
+        .sort((a, b) => b.demand - a.demand);
+    }
+
+    // Show lens type breakdown - always on default view
+    if (selectedSegTypes.length > 0) {
+      breakdowns.byLensType = selectedSegTypes.map(st => ({
+        name: st,
+        demand: Math.round(aggregations.segType[st] || 0),
+        skus: filteredDemandData.filter(x => x.segType === st).length
+      })).sort((a, b) => b.demand - a.demand);
+    } else if (!hasFilters) {
+      breakdowns.byLensType = Object.entries(aggregations.segType)
+        .map(([st, demand]) => ({ name: st, demand: Math.round(demand), skus: demandData.filter(x => x.segType === st).length }))
+        .sort((a, b) => b.demand - a.demand);
     }
 
     if (selectedSegTypes.length > 0) {
