@@ -148,6 +148,99 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
+ * API: /api/demand - Calculate demand over time period
+ */
+app.get('/api/demand', (req, res) => {
+  try {
+    if (!allData.length) {
+      return res.json({ 
+        period: 'unknown',
+        demand: [],
+        summary: { totalDemand: 0, skusWithDemand: 0, topMovers: [] }
+      });
+    }
+
+    // Parse period parameter (24h, 7d, 1mo, 12mo, or custom dates)
+    const period = req.query.period || '24h';
+    let startDate, endDate;
+    const now = new Date();
+
+    // Calculate date range
+    if (period === '24h') {
+      endDate = new Date(now);
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    } else if (period === '7d') {
+      endDate = new Date(now);
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === '1mo') {
+      endDate = new Date(now);
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    } else if (period === '12mo') {
+      endDate = new Date(now);
+      startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    } else if (req.query.startDate && req.query.endDate) {
+      startDate = new Date(req.query.startDate);
+      endDate = new Date(req.query.endDate);
+    } else {
+      return res.status(400).json({ error: 'Invalid period or date range' });
+    }
+
+    // For now, estimate demand based on current inventory vs baseline
+    // Real demand would require historical snapshots
+    const demandData = [];
+    const manufacturerDemand = {};
+    let totalDemand = 0;
+
+    allData.forEach(item => {
+      const currentInv = item['Current Inventory'] || 0;
+      // Estimate baseline (assume 50% less than current = demand)
+      const estimatedBaseline = currentInv * 1.5;
+      const demand = Math.max(0, estimatedBaseline - currentInv);
+      
+      if (demand > 0) {
+        demandData.push({
+          sku: item.ItemNumber,
+          description: item.ItemDesc,
+          manufacturer: item.MFG,
+          demand: Math.round(demand),
+          currentInventory: currentInv
+        });
+        
+        totalDemand += demand;
+        manufacturerDemand[item.MFG] = (manufacturerDemand[item.MFG] || 0) + demand;
+      }
+    });
+
+    // Sort by demand
+    demandData.sort((a, b) => b.demand - a.demand);
+
+    // Get top movers
+    const topMovers = demandData.slice(0, 10);
+    
+    // Get top manufacturers by demand
+    const topMfgs = Object.entries(manufacturerDemand)
+      .map(([mfg, demand]) => ({ manufacturer: mfg, demand: Math.round(demand) }))
+      .sort((a, b) => b.demand - a.demand)
+      .slice(0, 10);
+
+    res.json({
+      period,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      summary: {
+        totalDemand: Math.round(totalDemand),
+        skusWithDemand: demandData.length,
+        topMovers,
+        topManufacturers: topMfgs
+      },
+      demand: demandData
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * Serve index.html
  */
 app.get('/', (req, res) => {
