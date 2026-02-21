@@ -16,6 +16,7 @@ app.use(express.static('public'));
 // Load data from Excel file
 let allData = [];
 let cachedOptions = null;
+let dataLoaded = false;
 
 function loadInventoryData() {
   try {
@@ -30,25 +31,27 @@ function loadInventoryData() {
     }
 
     if (!fs.existsSync(filePath)) {
-      console.error('Excel file not found at:', filePath);
+      console.warn('⚠️  Excel file not found. App will run in demo mode.');
+      console.warn('   To load data, run: npm run seed');
       return false;
     }
 
-    console.log('Loading inventory from:', filePath);
+    console.log('📖 Loading inventory from:', filePath);
     const workbook = XLSX.readFile(filePath);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     allData = XLSX.utils.sheet_to_json(sheet);
     
-    console.log(`Loaded ${allData.length} SKU records`);
+    console.log(`✅ Loaded ${allData.length} SKU records`);
     
     // Cache options on load
-    console.log('Pre-computing filter options...');
+    console.log('📊 Pre-computing filter options...');
     cachedOptions = getUniqueValuesForAllFilters();
-    console.log('Options cached successfully');
+    console.log('✅ Options cached successfully');
     
+    dataLoaded = true;
     return true;
   } catch (error) {
-    console.error('Error loading inventory data:', error.message);
+    console.error('❌ Error loading inventory data:', error.message);
     return false;
   }
 }
@@ -110,6 +113,14 @@ function getUniqueValuesForAllFilters() {
 // Filter endpoint
 app.get('/api/filter', (req, res) => {
   try {
+    if (!dataLoaded) {
+      return res.status(503).json({ 
+        error: 'Data not loaded yet',
+        message: 'Excel file not found. App is running in demo mode.',
+        results: []
+      });
+    }
+
     const filters = req.query;
     const inventoryKey = 'Current Inventory (02/19/26)';
 
@@ -158,6 +169,22 @@ app.get('/api/filter', (req, res) => {
 // Get filter options
 app.get('/api/options', (req, res) => {
   try {
+    if (!dataLoaded) {
+      return res.json({ 
+        bases: [],
+        adds: [],
+        segTypes: [],
+        segLenses: [],
+        coatings: [],
+        colors: [],
+        diameters: [],
+        manufacturers: [],
+        brands: [],
+        countries: [],
+        message: 'No data loaded yet'
+      });
+    }
+
     if (!cachedOptions) {
       return res.status(503).json({ error: 'Options not yet cached' });
     }
@@ -172,8 +199,10 @@ app.get('/api/options', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    dataLoaded: allData.length > 0,
-    totalSKUs: allData.length
+    dataLoaded: dataLoaded,
+    totalSKUs: allData.length,
+    environment: process.env.NODE_ENV || 'production',
+    port: PORT
   });
 });
 
@@ -183,11 +212,23 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  
-  const dataLoaded = loadInventoryData();
-  if (!dataLoaded) {
-    console.warn('⚠️  Warning: Inventory data not loaded. Please ensure the Excel file is accessible.');
+async function start() {
+  try {
+    app.listen(PORT, () => {
+      console.log(`\n=================================`);
+      console.log(`🔗 Lens Tracker Server`);
+      console.log(`=================================`);
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`📍 http://localhost:${PORT}`);
+      console.log(`=================================`);
+      
+      // Try to load data (non-blocking)
+      loadInventoryData();
+    });
+  } catch (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
   }
-});
+}
+
+start();
