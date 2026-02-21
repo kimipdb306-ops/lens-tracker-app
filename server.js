@@ -1,66 +1,67 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const http = require('http');
 const fs = require('fs');
+const path = require('path');
 
-const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+const server = http.createServer((req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+  res.setHeader('Content-Type', 'application/json');
 
-// Simple data store
-let allData = [];
-let cachedOptions = null;
-let dataLoaded = false;
-
-// Health endpoint (minimal, no file dependency)
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    port: PORT,
-    uptime: process.uptime()
-  });
+  if (req.url === '/api/health') {
+    res.writeHead(200);
+    res.end(JSON.stringify({ 
+      status: 'ok',
+      port: PORT,
+      uptime: process.uptime()
+    }));
+  } else if (req.url === '/api/options') {
+    res.writeHead(200);
+    res.end(JSON.stringify({
+      bases: [],
+      adds: [],
+      segTypes: [],
+      segLenses: [],
+      coatings: [],
+      colors: [],
+      diameters: [],
+      manufacturers: [],
+      brands: [],
+      countries: []
+    }));
+  } else if (req.url === '/api/filter') {
+    res.writeHead(200);
+    res.end(JSON.stringify({
+      count: 0,
+      totalInventory: 0,
+      results: []
+    }));
+  } else if (req.url === '/' || req.url === '') {
+    // Serve index.html
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    fs.readFile(indexPath, 'utf8', (err, data) => {
+      if (err) {
+        res.setHeader('Content-Type', 'text/html');
+        res.writeHead(200);
+        res.end('<h1>Lens Tracker</h1><p>App is running. Index.html not found.</p>');
+      } else {
+        res.setHeader('Content-Type', 'text/html');
+        res.writeHead(200);
+        res.end(data);
+      }
+    });
+  } else {
+    res.writeHead(404);
+    res.end(JSON.stringify({ error: 'Not found' }));
+  }
 });
 
-// Options endpoint (returns empty if no data)
-app.get('/api/options', (req, res) => {
-  res.json({ 
-    bases: [],
-    adds: [],
-    segTypes: [],
-    segLenses: [],
-    coatings: [],
-    colors: [],
-    diameters: [],
-    manufacturers: [],
-    brands: [],
-    countries: []
-  });
+server.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
 
-// Filter endpoint (returns empty if no data)
-app.get('/api/filter', (req, res) => {
-  res.json({
-    count: 0,
-    totalInventory: 0,
-    results: []
-  });
-});
-
-// Serve root
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`✅ Server started on port ${PORT}`);
-});
-
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down');
   server.close(() => {
