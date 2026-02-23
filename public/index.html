@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Optics - Lens Tracker Mission Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1.1/dist/chartjs-chart-matrix.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="mission-control">
+        <!-- Header -->
+        <header class="control-header">
+            <div class="header-left">
+                <h1>🎯 LENS TRACKER</h1>
+                <p class="subtitle">Global Optics Mission Control</p>
+            </div>
+            <div class="header-right">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span id="status-text">LIVE</span>
+                </div>
+                <div class="time-display" id="time-display">--:--:--</div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="control-nav">
+            <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="nav-btn" data-tab="reorder">Reorder Tracking</button>
+            <button class="nav-btn" data-tab="trends">Trend Analysis</button>
+            <button class="nav-btn" data-tab="inventory">Full Inventory</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="control-main">
+
+            <!-- DASHBOARD TAB -->
+            <section id="dashboard" class="tab-content active">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card danger" data-tooltip="Units across all SKUs">
+                        <div class="kpi-icon">📦</div>
+                        <div class="kpi-content">
+                            <h3>Total Inventory</h3>
+                            <p id="kpi-inventory" class="kpi-value">-</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card alert">
+                        <div class="kpi-icon">⚠️</div>
+                        <div class="kpi-content">
+                            <h3>Needs Reorder</h3>
+                            <p id="kpi-reorder" class="kpi-value">-</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card critical">
+                        <div class="kpi-icon">🔴</div>
+                        <div class="kpi-content">
+                            <h3>Critical Stock</h3>
+                            <p id="kpi-critical" class="kpi-value">-</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-content">
+                            <h3>Avg Daily Demand</h3>
+                            <p id="kpi-demand" class="kpi-value">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-container">
+                    <!-- Manufacturer Trend -->
+                    <div class="chart-card">
+                        <h3>Demand Trend by Manufacturer</h3>
+                        <canvas id="manufacturerChart"></canvas>
+                    </div>
+
+                    <!-- Heatmap -->
+                    <div class="chart-card">
+                        <h3>Product Type × Coating Heatmap</h3>
+                        <canvas id="heatmapChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Movers -->
+                <div class="data-section">
+                    <h3>🔥 Top Moving SKUs</h3>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Type</th>
+                                    <th>Daily Demand</th>
+                                    <th>Current Stock</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topMovers">
+                                <tr><td colspan="5" class="loading">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REORDER TRACKING TAB -->
+            <section id="reorder" class="tab-content">
+                <div class="reorder-header">
+                    <h2>🚨 Reorder Tracking</h2>
+                    <div class="reorder-summary">
+                        <span id="reorder-count">-</span> items need reorder
+                    </div>
+                </div>
+
+                <div class="reorder-controls">
+                    <div class="filter-group">
+                        <label>Urgency Level:</label>
+                        <select id="urgency-filter">
+                            <option value="all">All</option>
+                            <option value="CRITICAL">Critical Only</option>
+                            <option value="HIGH">High & Critical</option>
+                        </select>
+                    </div>
+                    <button class="action-btn export-btn" onclick="exportReorderList()">📥 Export List</button>
+                </div>
+
+                <div class="data-section">
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Manufacturer</th>
+                                    <th>Type</th>
+                                    <th>Current Stock</th>
+                                    <th>Reorder Point</th>
+                                    <th>Days to Stockout</th>
+                                    <th>Urgency</th>
+                                    <th>Recommended Qty</th>
+                                    <th>Est. Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reorderTable">
+                                <tr><td colspan="9" class="loading">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="reorder-footer">
+                    <div class="cost-summary">
+                        <p>Total Estimated Reorder Cost: <strong id="totalReorderCost">-</strong></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TREND ANALYSIS TAB -->
+            <section id="trends" class="tab-content">
+                <h2>📈 Trend Analysis</h2>
+                
+                <div class="trend-grid">
+                    <!-- Trend by Manufacturer -->
+                    <div class="trend-card">
+                        <h3>By Manufacturer</h3>
+                        <div class="trend-list" id="trendManufacturer">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Trend by Lens Type -->
+                    <div class="trend-card">
+                        <h3>By Lens Type</h3>
+                        <div class="trend-list" id="trendLensType">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Trend by Coating -->
+                    <div class="trend-card">
+                        <h3>By Coating</h3>
+                        <div class="trend-list" id="trendCoating">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trend Chart -->
+                <div class="chart-card large">
+                    <h3>Demand Index Over Categories</h3>
+                    <canvas id="trendIndexChart"></canvas>
+                </div>
+            </section>
+
+            <!-- INVENTORY TAB -->
+            <section id="inventory" class="tab-content">
+                <h2>📋 Full Inventory</h2>
+                
+                <div class="inventory-controls">
+                    <input type="text" id="searchInput" placeholder="Search SKU, manufacturer...">
+                    <select id="sortSelect">
+                        <option value="sku">Sort by SKU</option>
+                        <option value="stock">Sort by Stock (Low to High)</option>
+                        <option value="demand">Sort by Demand (High to Low)</option>
+                    </select>
+                </div>
+
+                <div class="data-section">
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Manufacturer</th>
+                                    <th>Type</th>
+                                    <th>Coating</th>
+                                    <th>Current Stock</th>
+                                    <th>Daily Demand</th>
+                                    <th>Trend %</th>
+                                    <th>Days to Stockout</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTable">
+                                <tr><td colspan="8" class="loading">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
