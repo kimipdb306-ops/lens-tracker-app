@@ -180,6 +180,6 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Lens Tracker Dashboard running on port ${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}`);
+  console.log(`Lens Tracker Dashboard running on port ${PORT}`);
+  console.log(`Dashboard: http://localhost:${PORT}`);
 });
