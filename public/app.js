@@ -114,8 +114,8 @@ const chartOptions = {
         legend: {
             display: true,
             labels: {
-                color: 'var(--text-primary)',
-                font: { family: "'Segoe UI', monospace", size: 12 },
+                color: '#e4e8f1',
+                font: { family: "'Segoe UI', monospace", size: 12, weight: '600' },
                 padding: 15,
                 usePointStyle: true
             }
@@ -125,11 +125,13 @@ const chartOptions = {
         y: {
             beginAtZero: true,
             grid: { color: 'rgba(42, 63, 95, 0.3)' },
-            ticks: { color: 'var(--text-secondary)' }
+            ticks: { color: '#e4e8f1', font: { size: 11, weight: '600' } },
+            title: { display: true, color: '#e4e8f1', font: { size: 12, weight: '600' } }
         },
         x: {
             grid: { color: 'rgba(42, 63, 95, 0.3)' },
-            ticks: { color: 'var(--text-secondary)' }
+            ticks: { color: '#e4e8f1', font: { size: 11, weight: '600' } },
+            title: { display: true, color: '#e4e8f1', font: { size: 12, weight: '600' } }
         }
     }
 };
